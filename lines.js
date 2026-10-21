@@ -306,9 +306,27 @@ function parseChanges(text){
       if(!targets.some(t=>t.id===key)) targets.push({id:key, root:simplify(tgt), minor});
     }
   }
+  /* home key: the last chord if it sounds like a tonic (maj7, 6, m6, m(maj7)...), else the
+     first chord if it does, else the ii–V target that comes up most often */
+  const tonicLike = c => c.type==="maj" || (c.type==="min" && /^(m|-|mi|min)(6|69|6\/9|\(?maj7\)?|\(?ma7\)?|Δ7?|M7)?$/.test(c.q));
   let home = null;
-  for(let i=chords.length-1;i>=0;i--){ if(chords[i].type==="maj"||chords[i].type==="min"){ home = chords[i]; break; } }
-  return {chords, targets, home: home ? {root:simplify(home.root), minor: home.type==="min"} : null};
+  const last = chords[chords.length-1], first = chords[0];
+  if(last && tonicLike(last)) home = {root:last.root, minor:last.type==="min"};
+  else if(first && tonicLike(first)) home = {root:first.root, minor:first.type==="min"};
+  else if(targets.length){
+    const n = {}; targets.forEach(t=>n[t.id]=0);
+    for(let i=0;i<chords.length-1;i++){
+      const a = chords[i], b = chords[i+1];
+      if((a.type==="min"||a.type==="hd") && b.type==="dom" && mod(pcOf(b.root)-pcOf(a.root),12)===5){
+        const tg = moveName(b.root,3,5), nx = chords[i+2];
+        const minor = (nx && pcOf(nx.root)===pcOf(tg)) ? (nx.type==="min"||nx.type==="hd") : a.type==="hd";
+        n[pcOf(tg)+(minor?"m":"")]++;
+      }
+    }
+    const best = targets.slice().sort((x,y)=> n[y.id]-n[x.id])[0];
+    home = {root:best.root, minor:best.minor};
+  }
+  return {chords, targets, home: home ? {root:simplify(home.root), minor:home.minor} : null};
 }
 
 window.IIV = {T, parseName, nameStr, prettyName, prettyChord, pcOf, moveName, interval, simplify,
