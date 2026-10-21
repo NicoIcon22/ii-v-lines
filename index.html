@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=20261021d">
+<link rel="stylesheet" href="style.css?v=20261022a">
 </head>
 <body>
 
@@ -28,7 +28,8 @@
     <details class="chg" id="chgBox">
       <summary>Paste the chord changes (optional)</summary>
       <textarea id="changes" spellcheck="false" placeholder="| Gm7b5 | C7b9 | Fm7 | Bb7 | Ebmaj7 | ..."></textarea>
-      <p class="hint">Any ii–V in what you paste gets its own lines: a m7 or m7♭5 followed by a dominant 7th a fourth higher. Bar lines and spacing don't matter. The Key menu then sets the home key; it doesn't transpose what you pasted.</p>
+      <button class="btn ghost sm" type="button" id="useLib" hidden style="margin-top:8px" title="Put the library's changes in the box so you can edit them">Edit the library changes</button>
+      <p class="hint">Every ii–V in what you paste gets its own lines: a m7 or m7♭5 followed by a dominant 7th a fourth higher, major or minor, resolving to a major, minor or dominant chord or not resolving at all. Spacing doesn't matter; with bar lines (|) each section also says which bars its ii–V is in. The Key menu then sets the home key; it doesn't transpose what you pasted.</p>
     </details>
     <div class="filerow">
       <button class="btn ghost sm" type="button" id="pdfBtn" title="Read the chord changes from a chart PDF">Upload chart PDF</button>
@@ -133,10 +134,10 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.4.4/abcjs-basic-min.js"></script>
-<script src="tunes.js?v=20261021d"></script>
-<script src="lines.js?v=20261021d"></script>
-<script src="pdfchart.js?v=20261021d"></script>
-<script src="mytunes.js?v=20261021d"></script>
-<script src="app.js?v=20261021d"></script>
+<script src="tunes.js?v=20261022a"></script>
+<script src="lines.js?v=20261022a"></script>
+<script src="pdfchart.js?v=20261022a"></script>
+<script src="mytunes.js?v=20261022a"></script>
+<script src="app.js?v=20261022a"></script>
 </body>
 </html>
