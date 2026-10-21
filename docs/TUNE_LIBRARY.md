@@ -1,57 +1,59 @@
 # Tune library
 
-The tunes the generator knows by name, with the key it uses by default and the ii–V targets it writes lines for. Only ii–Vs and ii–V–Is that are in the tune get lines. A target in major gets a major ii–V (m7 → 7 → maj7); a minor target gets a minor ii–V (m7♭5 → 7♭9 → m7); a dominant target (written like G7 below) gets a ii–V into that dominant chord (m7 → 7 → 7), with the line's last bar using the ♭7; a target written like Cm7 is a ii–V with a m7 ii into a minor chord (Dm7 → G7 → Cm7). With long lines the home ii–V also gets a one-bar version, and when the tune has the minor ii–V into ii next to the home ii–V, the full chain plays the two as one line.
+The tunes the generator knows by name, with the key it uses by default and the ii–Vs it writes lines for. Every tune except East of the Sun stores its chord changes (`ch` in `tunes.js`, as on a common fake-book chart), and the app finds the ii–Vs in them exactly as it does for a pasted or uploaded chart: every m7 or m7♭5 followed by a dominant 7th a fourth up, major or minor, resolving to a major, minor or dominant I, or not resolving at all. The last column is what it finds, as ii → V → I in the tune's key. "Doesn't resolve" means the I shown is where the ii–V points, not a chord in the tune; "also unresolved" means the same ii–V turns up elsewhere without resolving. East of the Sun keeps the four targets from the original E♭ page.
 
-Keys follow common fake-book keys. To use another key, pick it in the Key menu and every target moves with it. To use a chart's exact changes, paste them into the Changes box or upload the chart PDF.
+Open *Paste the chord changes* on the page to see a library tune's changes (in the key you picked), and *Edit the library changes* to copy them into the box and change them. Fake books differ, so check them against your chart; pasting or uploading your chart always takes over.
+
+With long lines the home ii–V also gets a one-bar version, and when the changes have the minor ii–V into ii right before the home ii–V (iii VI ii V I), the full chain plays the two as one line.
 
 To add a tune, add an entry to `tunes.js` (format described at the top of that file).
 
-| Tune | Composer | Year | Key | Style | ii–V targets |
+| Tune | Composer | Year | Key | Style | ii–Vs in the changes |
 |---|---|---|---|---|---|
-| East of the Sun (and West of the Moon) | Brooks Bowman | 1934 | E♭ | Swing | E♭, F minor, A♭, C minor |
-| Autumn Leaves | Joseph Kosma | 1945 | G minor | Swing | G minor, B♭ |
-| All the Things You Are | Jerome Kern | 1939 | A♭ | Swing | A♭, E♭, G, E |
-| Blue Bossa | Kenny Dorham | 1963 | C minor | Bossa nova | C minor, D♭ |
-| Satin Doll | Duke Ellington & Billy Strayhorn | 1953 | C | Swing | C, F, G7 |
-| Take the "A" Train | Billy Strayhorn | 1939 | C | Swing | C |
-| Tune Up | Miles Davis (credited) | 1953 | D | Up-tempo swing | D, C, B♭ |
-| Solar | Miles Davis (credited) | 1954 | C minor | Swing | C minor, F, E♭, D♭ |
-| Blues for Alice | Charlie Parker | 1951 | F | Bebop blues | F, D minor, Cm7, B♭7, A♭, G♭ |
-| There Will Never Be Another You | Harry Warren | 1942 | E♭ | Swing | E♭, C minor, A♭ |
-| Stella by Starlight | Victor Young | 1944 | B♭ | Swing | B♭, E♭, F, D minor, C minor |
-| Just Friends | John Klenner | 1931 | G | Swing | G, A minor |
-| Misty | Erroll Garner | 1954 | E♭ | Ballad | E♭, A♭ |
-| Fly Me to the Moon | Bart Howard | 1954 | C | Swing | C, A minor |
-| Days of Wine and Roses | Henry Mancini | 1962 | F | Swing | F, G minor, D minor |
-| Have You Met Miss Jones? | Richard Rodgers | 1937 | F | Swing | F, B♭, G♭, D |
-| Lady Bird | Tadd Dameron | 1939 | C | Swing | C, A♭ |
-| Confirmation | Charlie Parker | 1946 | F | Bebop | F, D minor, B♭, D♭ |
-| Donna Lee | Charlie Parker | 1947 | A♭ | Bebop | A♭, D♭, F minor |
-| Giant Steps | John Coltrane | 1959 | B (no key signature) | Up-tempo | B, G, E♭ |
-| Cherokee | Ray Noble | 1938 | B♭ | Up-tempo swing | B♭, E♭, B, A, G |
-| How High the Moon | Morgan Lewis | 1940 | G | Swing | G, F, E♭ |
-| Ornithology | Charlie Parker & Benny Harris | 1946 | G | Bebop | G, F, E♭ |
-| Body and Soul | Johnny Green | 1930 | D♭ | Ballad | D♭, E♭ minor, D, C |
-| Alone Together | Arthur Schwartz | 1932 | D minor | Swing | D minor, G minor, F |
-| Beautiful Love | Victor Young | 1931 | D minor | Swing | D minor, F |
-| A Night in Tunisia | Dizzy Gillespie | 1942 | D minor | Afro-Cuban / swing | D minor, G minor, F |
-| Yesterdays | Jerome Kern | 1933 | D minor | Swing | D minor |
-| Softly, as in a Morning Sunrise | Sigmund Romberg | 1928 | C minor | Swing | C minor, E♭ |
-| My Funny Valentine | Richard Rodgers | 1937 | C minor | Ballad | C minor, E♭ |
-| Bye Bye Blackbird | Ray Henderson | 1926 | F | Swing | F, G minor |
-| I Got Rhythm (Rhythm changes) | George Gershwin | 1930 | B♭ | Up-tempo swing | B♭, Cm7, E♭, G7, C7 |
-| Oleo | Sonny Rollins | 1954 | B♭ | Up-tempo (Rhythm changes) | B♭, Cm7, E♭ |
-| Anthropology | Charlie Parker & Dizzy Gillespie | 1946 | B♭ | Bebop (Rhythm changes) | B♭, Cm7, E♭ |
-| Blues in F (bebop changes) | Traditional form | — | F | Blues | F7, B♭7, G minor |
-| Blues in B♭ (bebop changes) | Traditional form | — | B♭ | Blues | B♭7, E♭7, C minor |
-| Joy Spring | Clifford Brown | 1954 | F | Swing | F, G♭ |
-| Afternoon in Paris | John Lewis | 1949 | C | Swing | C, B♭, A♭ |
-| What Is This Thing Called Love? | Cole Porter | 1929 | C | Swing | C, F |
-| All of Me | Gerald Marks & Seymour Simons | 1931 | C | Swing | C, D minor, A minor |
-| Out of Nowhere | Johnny Green | 1931 | G | Swing | G, E minor |
-| Honeysuckle Rose | Fats Waller | 1929 | F | Swing | F, B♭ |
-| Scrapple from the Apple | Charlie Parker | 1947 | F | Bebop | F, D, G |
-| Perdido | Juan Tizol | 1941 | B♭ | Swing | B♭ |
-| The Girl from Ipanema | Antônio Carlos Jobim | 1962 | F | Bossa nova | F, G minor |
+| East of the Sun (and West of the Moon) | Brooks Bowman | 1934 | E♭ | Swing | E♭, F minor, A♭, C minor (target list) |
+| Autumn Leaves | Joseph Kosma | 1945 | G minor | Swing | Cm7 → F7 → B♭maj7; Am7♭5 → D7 → Gm7; Gm7 → C7 → Fm7; Fm7 → B♭7 → E♭maj7 |
+| All the Things You Are | Jerome Kern | 1939 | A♭ | Swing | B♭m7 → E♭7 → A♭maj7; Fm7 → B♭7 → E♭maj7; Am7 → D7 → Gmaj7; F♯m7 → B7 → Emaj7; Gm7♭5 → C7 → Fm7 (doesn't resolve) |
+| Blue Bossa | Kenny Dorham | 1963 | C minor | Bossa nova | Dm7♭5 → G7 → Cm7 (also unresolved); E♭m7 → A♭7 → D♭maj7 |
+| Satin Doll | Duke Ellington & Billy Strayhorn | 1953 | C | Swing | Dm7 → G7 → Cmaj7 (doesn't resolve); Em7 → A7 → Dmaj7 (doesn't resolve); Am7 → D7 → G7 (also unresolved); A♭m7 → D♭7 → G♭maj7 (doesn't resolve); Gm7 → C7 → Fmaj7 (also unresolved) |
+| Take the "A" Train | Billy Strayhorn | 1939 | C | Swing | Dm7 → G7 → Cmaj7 (also unresolved) |
+| Tune Up | Miles Davis (credited) | 1953 | D | Up-tempo swing | Em7 → A7 → Dmaj7 (also unresolved); Dm7 → G7 → Cmaj7; Cm7 → F7 → B♭maj7 |
+| Solar | Miles Davis (credited) | 1954 | C minor | Swing | Gm7 → C7 → Fmaj7; Fm7 → B♭7 → E♭maj7; E♭m7 → A♭7 → D♭maj7; Dm7♭5 → G7 → Cm7 (doesn't resolve) |
+| Blues for Alice | Charlie Parker | 1951 | F | Bebop blues | Em7♭5 → A7 → Dm7; Dm7 → G7 → Cm7; Cm7 → F7 → B♭7; B♭m7 → E♭7 → A♭maj7 (doesn't resolve); Am7 → D7 → Gmaj7 (doesn't resolve); A♭m7 → D♭7 → G♭maj7 (doesn't resolve); Gm7 → C7 → Fmaj7 (also unresolved) |
+| There Will Never Be Another You | Harry Warren | 1942 | E♭ | Swing | Dm7♭5 → G7 → Cm7; B♭m7 → E♭7 → A♭maj7; Cm7 → F7 → B♭maj7 (doesn't resolve); Fm7 → B♭7 → E♭maj7 (also unresolved); Am7♭5 → D7 → Gm7 (doesn't resolve) |
+| Stella by Starlight | Victor Young | 1944 | B♭ | Swing | Em7♭5 → A7 → Dm7 (also unresolved); Cm7 → F7 → B♭maj7 (doesn't resolve); Fm7 → B♭7 → E♭maj7; B♭m7 → E♭7 → A♭maj7 (doesn't resolve); Am7♭5 → D7 → G7; Dm7♭5 → G7 → Cm7; Cm7♭5 → F7 → B♭maj7 |
+| Just Friends | John Klenner | 1931 | G | Swing | Cm7 → F7 → B♭maj7 (doesn't resolve); B♭m7 → E♭7 → A♭maj7 (doesn't resolve); Am7 → D7 → Gmaj7 (also unresolved); Bm7 → E7 → Am7 |
+| Misty | Erroll Garner | 1954 | E♭ | Ballad | B♭m7 → E♭7 → A♭maj7; A♭m7 → D♭7 → G♭maj7 (doesn't resolve); Fm7 → B♭7 → E♭maj7 (also unresolved); Gm7 → C7 → Fm7; Am7 → D7 → Gm7 |
+| Fly Me to the Moon | Bart Howard | 1954 | C | Swing | Dm7 → G7 → Cmaj7 (also unresolved); Bm7♭5 → E7 → Am7 (also unresolved); Em7 → A7 → Dm7 |
+| Days of Wine and Roses | Henry Mancini | 1962 | F | Swing | Am7 → D7 → Gm7; B♭m7 → E♭7 → A♭maj7 (doesn't resolve); Gm7 → C7 → Fmaj7 (also unresolved); Em7♭5 → A7 → Dm7; Dm7 → G7 → Cmaj7 (doesn't resolve) |
+| Have You Met Miss Jones? | Richard Rodgers | 1937 | F | Swing | Gm7 → C7 → Fmaj7 (also unresolved); Am7 → D7 → Gm7; Cm7 → F7 → B♭maj7; A♭m7 → D♭7 → G♭maj7; Em7 → A7 → Dmaj7 |
+| Lady Bird | Tadd Dameron | 1939 | C | Swing | Fm7 → B♭7 → E♭maj7 (doesn't resolve); B♭m7 → E♭7 → A♭maj7; Am7 → D7 → Gmaj7 (doesn't resolve); Dm7 → G7 → Cmaj7 |
+| Confirmation | Charlie Parker | 1946 | F | Bebop | Em7♭5 → A7 → Dm7; Dm7 → G7 → Cm7; Cm7 → F7 → B♭7; Am7 → D7 → Gm7; Gm7 → C7 → Fmaj7; Cm7 → F7 → B♭maj7; E♭m7 → A♭7 → D♭maj7 |
+| Donna Lee | Charlie Parker | 1947 | A♭ | Bebop | B♭m7 → E♭7 → A♭maj7 (also unresolved); E♭m7 → A♭7 → D♭maj7; C♯m7 → F♯7 → Bmaj7 (doesn't resolve); Gm7♭5 → C7 → Fm7 |
+| Giant Steps | John Coltrane | 1959 | B (no key signature) | Up-tempo | Am7 → D7 → Gmaj7; Fm7 → B♭7 → E♭maj7; C♯m7 → F♯7 → Bmaj7 (also unresolved) |
+| Cherokee | Ray Noble | 1938 | B♭ | Up-tempo swing | Fm7 → B♭7 → E♭maj7; Cm7 → F7 → B♭maj7 (also unresolved); C♯m7 → F♯7 → Bmaj7; Bm7 → E7 → Amaj7; Am7 → D7 → Gmaj7; Gm7 → C7 → Fmaj7 (doesn't resolve) |
+| How High the Moon | Morgan Lewis | 1940 | G | Swing | Gm7 → C7 → Fmaj7; Fm7 → B♭7 → E♭maj7; Am7♭5 → D7 → Gmaj7; Am7 → D7 → Gmaj7 (also unresolved); B♭m7 → E♭7 → A♭maj7 (doesn't resolve); Bm7 → E7 → Am7; Cm7 → F7 → B♭maj7 (doesn't resolve) |
+| Ornithology | Charlie Parker & Benny Harris | 1946 | G | Bebop | Gm7 → C7 → Fmaj7; Fm7 → B♭7 → E♭maj7; Am7♭5 → D7 → Gmaj7; Am7 → D7 → Gmaj7 (also unresolved); B♭m7 → E♭7 → A♭maj7 (doesn't resolve); Bm7 → E7 → Am7; Cm7 → F7 → B♭maj7 (doesn't resolve) |
+| Body and Soul | Johnny Green | 1930 | D♭ | Ballad | E♭m7 → A♭7 → D♭maj7 (also unresolved); Fm7♭5 → B♭7 → E♭m7; Em7 → A7 → Dmaj7; Em7 → A7 → Dm7; Dm7 → G7 → Cmaj7 |
+| Alone Together | Arthur Schwartz | 1932 | D minor | Swing | Em7♭5 → A7 → Dm7 (also unresolved); Am7♭5 → D7 → Gm7; Bm7 → E7 → Amaj7 (doesn't resolve); Gm7 → C7 → Fmaj7; Gm7♭5 → C7 → Fmaj7 |
+| Beautiful Love | Victor Young | 1931 | D minor | Swing | Em7♭5 → A7 → Dm7 (also unresolved); Gm7 → C7 → Fmaj7; Dm7 → G7 → Cmaj7 (doesn't resolve) |
+| A Night in Tunisia | Dizzy Gillespie | 1942 | D minor | Afro-Cuban / swing | Em7♭5 → A7 → Dm7 (also unresolved); Am7♭5 → D7 → Gm7; Gm7♭5 → C7 → Fmaj7 |
+| Yesterdays | Jerome Kern | 1933 | D minor | Swing | Em7♭5 → A7 → Dm7 (also unresolved); Bm7♭5 → E7 → A7 |
+| Softly, as in a Morning Sunrise | Sigmund Romberg | 1928 | C minor | Swing | Dm7♭5 → G7 → Cm7 (also unresolved); Gm7♭5 → C7 → Fm7; Fm7 → B♭7 → E♭maj7 |
+| My Funny Valentine | Richard Rodgers | 1937 | C minor | Ballad | Dm7♭5 → G7 → Cm7 (also unresolved); Fm7 → B♭7 → E♭maj7 (also unresolved); Gm7 → C7 → Fm7; B♭m7 → E♭7 → A♭maj7 |
+| Bye Bye Blackbird | Ray Henderson | 1926 | F | Swing | Gm7 → C7 → Fmaj7 (also unresolved); Am7♭5 → D7 → Gm7; Cm7 → F7 → B♭maj7; Am7 → D7 → Gm7 |
+| I Got Rhythm (Rhythm changes) | George Gershwin | 1930 | B♭ | Up-tempo swing | Cm7 → F7 → B♭maj7 (also unresolved); Dm7 → G7 → Cm7; Fm7 → B♭7 → E♭maj7 |
+| Oleo | Sonny Rollins | 1954 | B♭ | Up-tempo (Rhythm changes) | Cm7 → F7 → B♭maj7 (also unresolved); Dm7 → G7 → Cm7 (also unresolved); Fm7 → B♭7 → E♭maj7; Am7 → D7 → Gmaj7 (doesn't resolve); Gm7 → C7 → Fmaj7 (doesn't resolve) |
+| Anthropology | Charlie Parker & Dizzy Gillespie | 1946 | B♭ | Bebop (Rhythm changes) | Cm7 → F7 → B♭maj7 (also unresolved); Dm7 → G7 → Cm7 (also unresolved); Fm7 → B♭7 → E♭maj7; Am7 → D7 → Gmaj7 (doesn't resolve); Gm7 → C7 → Fmaj7 (doesn't resolve) |
+| Blues in F (bebop changes) | Traditional form | — | F | Blues | Cm7 → F7 → B♭7; Am7♭5 → D7 → Gm7; Gm7 → C7 → F7 (also unresolved) |
+| Blues in B♭ (bebop changes) | Traditional form | — | B♭ | Blues | Fm7 → B♭7 → E♭7; Dm7♭5 → G7 → Cm7; Cm7 → F7 → B♭7 (also unresolved) |
+| Joy Spring | Clifford Brown | 1954 | F | Swing | Gm7 → C7 → Fmaj7; B♭m7 → E♭7 → A♭maj7 (doesn't resolve); A♭m7 → D♭7 → G♭maj7 (also unresolved); Bm7 → E7 → Amaj7 (doesn't resolve); Am7 → D7 → Gmaj7 (doesn't resolve); Fm7 → B♭7 → E♭maj7; Am7♭5 → D7 → Gm7 (doesn't resolve) |
+| Afternoon in Paris | John Lewis | 1949 | C | Swing | Cm7 → F7 → B♭maj7; B♭m7 → E♭7 → A♭maj7; Dm7 → G7 → Cmaj7 (also unresolved); Em7 → A7 → Dm7 |
+| What Is This Thing Called Love? | Cole Porter | 1929 | C | Swing | Dm7♭5 → G7 → Cm7; Gm7♭5 → C7 → Fmaj7; Fm7 → B♭7 → E♭maj7 (doesn't resolve); Dm7♭5 → G7 → Cmaj7 |
+| All of Me | Gerald Marks & Seymour Simons | 1931 | C | Swing | Am7 → D7 → Gmaj7 (doesn't resolve); Dm7 → G7 → Cmaj7 (also unresolved); Em7 → A7 → Dm7 |
+| Out of Nowhere | Johnny Green | 1931 | G | Swing | B♭m7 → E♭7 → A♭maj7 (doesn't resolve); Am7 → D7 → Gmaj7 (also unresolved); F♯m7♭5 → B7 → Em7; Em7 → A7 → Dmaj7 (doesn't resolve); Bm7 → E7 → Am7; Cm7 → F7 → B♭maj7 (doesn't resolve) |
+| Honeysuckle Rose | Fats Waller | 1929 | F | Swing | Gm7 → C7 → Fmaj7 (also unresolved); Cm7 → F7 → B♭maj7 (also unresolved); Dm7 → G7 → Cmaj7 (doesn't resolve) |
+| Scrapple from the Apple | Charlie Parker | 1947 | F | Bebop | Gm7 → C7 → Fmaj7 (also unresolved); Em7 → A7 → Dmaj7 (doesn't resolve); Am7 → D7 → Gmaj7 (doesn't resolve); Dm7 → G7 → Cmaj7 (doesn't resolve) |
+| Perdido | Juan Tizol | 1941 | B♭ | Swing | Cm7 → F7 → B♭maj7 (also unresolved); Am7 → D7 → Gmaj7 (doesn't resolve); Dm7 → G7 → Cmaj7 (doesn't resolve); Gm7 → C7 → Fmaj7 (doesn't resolve) |
+| The Girl from Ipanema | Antônio Carlos Jobim | 1962 | F | Bossa nova | Am7 → D7 → Gm7; Gm7 → C7 → Fmaj7 |
 
 45 tunes.
