@@ -342,22 +342,29 @@ function chordType(q){
   return "maj";
 }
 function parseChanges(text){
-  const toks = text.replace(/[()\[\]%]/g," ").split(/[\s|,;:]+/).filter(Boolean);
+  /* chords in order, with the bar each one starts in when the text has bar lines */
+  const hasBars = /\|/.test(text);
   const chords = [];
-  toks.forEach(tok=>{
-    const m = /^([A-G](?:b|#|♭|♯)?)([^/]*)(\/.*)?$/.exec(tok);
-    if(!m) return;
-    const root = parseName(m[1].replace("♭","b").replace("♯","#"));
-    const last = chords[chords.length-1];
-    const c = {root, type: chordType(m[2]), q:m[2]};
-    if(last && pcOf(last.root)===pcOf(root) && last.type===c.type) return; /* repeated chord */
-    chords.push(c);
+  let bar = 0;
+  text.replace(/[()\[\]%]/g," ").split(/\|/).forEach(seg=>{
+    const toks = seg.split(/[\s,;:]+/).filter(Boolean);
+    let counted = false;
+    toks.forEach(tok=>{
+      const m = /^([A-G](?:b|#|♭|♯)?)([^/]*)(\/.*)?$/.exec(tok);
+      if(!m) return;
+      if(!counted){ bar++; counted = true; }
+      const root = parseName(m[1].replace("♭","b").replace("♯","#"));
+      const last = chords[chords.length-1];
+      const c = {root, type: chordType(m[2]), q:m[2], bar: hasBars ? bar : 0};
+      if(last && pcOf(last.root)===pcOf(root) && last.type===c.type) return; /* repeated chord */
+      chords.push(c);
+    });
   });
-  /* every ii–V in the changes: a m7 or m7♭5 followed by a dominant 7th a fourth up. With the
-     chord after it a fifth below the V it is a ii–V–I, and the I's quality (major, minor or
-     dominant) comes from the tune; otherwise it is a ii–V on its own, and the I it points to
-     is taken from the ii (m7 → major, m7♭5 → minor). Nothing else in the changes gets lines:
-     a V–I with no ii, or chords moving any other way, is left alone. */
+  /* every ii–V in the changes: a m7 or m7♭5 followed by a dominant 7th a fourth up, major or
+     minor, wherever it goes. When the next chord is the I (a fifth below the V) it is a
+     ii–V–I, and the I's quality (major, minor or dominant) comes from the tune; when it isn't,
+     the ii–V doesn't resolve, and the I it points to is taken from the ii (m7 → major,
+     m7♭5 → minor). A V–I with no ii, or chords moving any other way, gets nothing. */
   const IQ = {maj:"maj7", min:"m7", hd:"m7", dom:"7"};
   const iiVs = [];
   for(let i=0;i<chords.length-1;i++){
@@ -365,16 +372,33 @@ function parseChanges(text){
     if(!((a.type==="min"||a.type==="hd") && b.type==="dom" && mod(pcOf(b.root)-pcOf(a.root),12)===5)) continue;
     const tgt = moveName(b.root, 3, 5), nx = chords[i+2];
     const resolved = !!(nx && pcOf(nx.root)===pcOf(tgt) && IQ[nx.type]);
-    const iq = resolved ? IQ[nx.type] : (a.type==="hd" ? "m7" : "maj7");
     const minor = a.type==="hd";
-    iiVs.push({at:i, root:simplify(tgt), minor, iq, resolved,
-      id: pcOf(tgt) + (minor ? "m" : "") + (iq===(minor ? "m7" : "maj7") ? "" : "-" + iq)});
+    iiVs.push({at:i, root:simplify(tgt), minor, resolved,
+      iq: resolved ? IQ[nx.type] : (minor ? "m7" : "maj7"),
+      bars: a.bar ? [a.bar, (resolved ? nx : b).bar] : null});
   }
-  const targets = [];
-  iiVs.forEach(t=>{
-    const have = targets.find(x=>x.id===t.id);
-    if(have){ have.resolved = have.resolved || t.resolved; return; }
-    targets.push({id:t.id, root:t.root, minor:t.minor, iq:t.iq, resolved:t.resolved});
+  /* one target per ii–V and resolution: the same ii–V resolving to different kinds of I chord
+     gets one section per kind; where it also turns up without resolving, those bars join the
+     first of them; a ii–V that never resolves gets its own section */
+  const targets = [], byKey = {};
+  const idOf = (pc, minor, iq) => pc + (minor ? "m" : "") + (iq===(minor ? "m7" : "maj7") ? "" : "-" + iq);
+  iiVs.filter(t=>t.resolved).forEach(t=>{
+    const id = idOf(pcOf(t.root), t.minor, t.iq);
+    let tg = targets.find(x=>x.id===id);
+    if(!tg){ tg = {id, root:t.root, minor:t.minor, iq:t.iq, resolved:true, occ:[]}; targets.push(tg); }
+    tg.occ.push(t);
+  });
+  iiVs.filter(t=>!t.resolved).forEach(t=>{
+    const k = pcOf(t.root) + (t.minor ? "m" : "");
+    let tg = targets.find(x=> pcOf(x.root)+(x.minor ? "m" : "")===k);
+    if(!tg){ tg = {id:idOf(pcOf(t.root), t.minor, t.iq), root:t.root, minor:t.minor, iq:t.iq, resolved:false, occ:[]}; targets.push(tg); }
+    tg.occ.push(t);
+  });
+  /* back in the order the ii–Vs first come up in the tune */
+  targets.sort((x,y)=> Math.min(...x.occ.map(o=>o.at)) - Math.min(...y.occ.map(o=>o.at)));
+  targets.forEach(t=>{
+    t.open = t.occ.some(o=>!o.resolved);
+    t.bars = t.occ.filter(o=>o.bars).map(o=>({from:o.bars[0], to:o.bars[1], resolved:o.resolved}));
   });
   /* the chain: a ii–V into a m7 chord that is itself the ii of the next ii–V (iii VI ii V) */
   const chain = [];
@@ -384,19 +408,26 @@ function parseChanges(text){
   });
   /* home key: the last chord if it sounds like a tonic (maj7, 6, m6, m(maj7)...), else the
      first chord if it does, else the ii–V target that comes up most often */
-  const tonicLike = c => c.type==="maj" || (c.type==="min" && /^(m|-|mi|min)(6|69|6\/9|\(?maj7\)?|\(?ma7\)?|Δ7?|M7)?$/.test(c.q));
+  const tonicLike = c => c.type==="maj" || (c.type==="min" && /^(m|-|mi|min)(6|69|6\/9|\(?maj7\)?|\(?ma7\)?|Maj7|Δ7?|M7)?$/.test(c.q));
   let home = null;
   const last = chords[chords.length-1], first = chords[0];
   if(last && tonicLike(last)) home = {root:last.root, minor:last.type==="min"};
   else if(first && tonicLike(first)) home = {root:first.root, minor:first.type==="min"};
   else if(targets.length){
-    const n = {}; iiVs.forEach(t=> n[t.id] = (n[t.id]||0) + 1);
-    const best = targets.slice().sort((x,y)=> n[y.id]-n[x.id])[0];
+    const best = targets.slice().sort((x,y)=> y.occ.length-x.occ.length)[0];
     home = {root:best.root, minor:best.iq==="m7"};
   }
-  return {chords, targets, chain, home: home ? {root:simplify(home.root), minor:home.minor} : null};
+  return {chords, targets, chain, hasBars, home: home ? {root:simplify(home.root), minor:home.minor} : null};
+}
+/* chord names in a changes text moved by an interval ({steps, semis}); bar lines and
+   spacing stay as they are */
+function transposeChanges(text, iv){
+  return text.replace(/(^|[\s|\/(,])([A-G])(bb|##|b|#|♭|♯)?/g, (m, pre, L, acc)=>{
+    const n = simplify(moveName(parseName(L + (acc||"").replace("♭","b").replace("♯","#")), iv.steps, iv.semis));
+    return pre + nameStr(n);
+  });
 }
 
 window.IIV = {T, parseName, nameStr, prettyName, prettyChord, pcOf, moveName, interval, simplify,
-  parseKey, sigFor, realize, lineAbc, lineEvents, voicing, parseChanges, midiOf, glyph, LET};
+  parseKey, sigFor, realize, lineAbc, lineEvents, voicing, parseChanges, transposeChanges, midiOf, glyph, LET};
 })();
