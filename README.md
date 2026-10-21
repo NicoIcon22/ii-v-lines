@@ -11,7 +11,9 @@ It grew out of the *East of the Sun ii–V Lines* page and keeps the same layout
 1. **Tune.** Start typing and pick from the suggestions. Tunes in the library (see `docs/TUNE_LIBRARY.md`) come with their key and their ii–Vs.
 2. **Key.** Leave it on *Tune's key*, or pick another key to transpose everything. For a tune that isn't in the library, the key decides the ii–Vs: home, into ii, to IV and into vi for a major key; home, the relative major and the iv for a minor key.
 3. **Paste the chord changes (optional).** Any ii–V in the text (a m7 or m7♭5 followed by a dominant 7th a fourth up) gets its own lines. This overrides the library list. With pasted changes, the Key menu sets the home key and doesn't transpose them.
-4. **Upload chart PDF (optional).** Click *Upload chart PDF* or drop a PDF on the tune box. The app reads the chord symbols from the PDF's text, puts them in the changes box (check or edit them there), takes the title from the chart, generates the lines and shows the chart's pages above them. A scanned chart has no text to read: it's still shown and saved, and you paste its changes. Remove it with the × on the file name.
+4. **Upload chart PDF (optional).** Click *Upload chart PDF* or drop a PDF on the tune box. The lines always come from the chart's own chord changes, never the library's list, even when the title matches a library tune. The app reads the chord symbols from the PDF's text, or, for a scanned chart with no text, with OCR ([Tesseract.js](https://tesseract.projectnaptha.com/) 5.1.1, downloaded the first time, about 10 MB). The chords go into the changes box: check them there against the chart (OCR in particular can misread a symbol), fix anything and press Generate lines. It also takes the title from the chart and shows the chart's pages above the lines. If no chord symbols can be read at all, the status line says so and the changes box opens for you to type them. Remove the PDF with the × on its name.
+
+   From a chart or pasted changes, every ii–V (m7 or m7♭5 → dominant a fourth up) gets lines, and so does every V7 → I with no ii in front: it's practised as a full ii–V, with the ii added and a note saying so.
 5. **Lines per ii–V.** Pick how many essential and how many bebop lines each ii–V gets (0–3 each; default 1 + 1). Lines in a section are always different from each other.
 6. **Length.** *Long* writes one bar per chord (ii | V | I), as before, plus a one-bar ii–V section in the home key. *Short* writes every ii–V with two beats per chord (ii V | I). *Both* gives each ii–V its long and its short lines, tagged Long and Short.
 7. **Generate lines**, then **New variations** to get different lines for the same ii–Vs. The button flashes, shows the variation number, and the lines that changed light up briefly.
@@ -40,6 +42,8 @@ Typing a different title: a tune from My tunes brings back its saved setup, a li
 
 The transport bar works as before: Read for Concert / B♭ / E♭, Treble or Bass clef, Octave lower (default) or Original, Tempo, Swing, Piano & bass, Loop. Playing a line highlights each note as it sounds.
 
+**Read for B♭ / E♭** writes everything in the instrument's key, not just the notation: the chord path above each section, the section notes, the explanation under every line, the summary at the top and the printout all use the same chord and note names as the staff (B♭ instruments read a major 2nd up, E♭ instruments a major 6th up; for keys nobody writes, like G♯, the enharmonic key is used). Concert pitch is still shown in the header, and playback always sounds at concert pitch.
+
 Every setting is in the URL, so a link opens the same page, for example
 `?tune=Autumn Leaves&key=Am&v=2`, `?tune=Misty&e=2&b=2&len=both` or `?tune=My Tune&key=F&changes=Gm7 C7 | Fmaj7`.
 
@@ -53,7 +57,7 @@ The template pools hold 4 essential and 4 bebop long lines per ii–V type (majo
 
 - `lines.js` holds the line templates and the engine. Each template is written in ABC notation for one specific ii–V. The engine parses it to pitches, moves it diatonically to the target ii–V (so B♭ stays a B♭-shaped note and never turns into A♯), chooses up or down so the line stays between G3 and A5, and writes ABC back out against the tune's key signature with bar-by-bar accidentals. Chord symbols and the note under each line are transposed the same way. See `docs/LINE_TEMPLATES.md`.
 - `tunes.js` is the tune library: title, composer, year, key, style and ii–V targets.
-- `pdfchart.js` reads chart PDFs with [pdf.js](https://mozilla.github.io/pdf.js/) 3.11.174 (loaded the first time a PDF is used): it joins text pieces on each line (so a raised “-7” after “F” becomes “F-7”), keeps lines that are mostly chord symbols, guesses the title from the biggest text at the top of page 1, and draws the pages.
+- `pdfchart.js` reads chart PDFs with [pdf.js](https://mozilla.github.io/pdf.js/) 3.11.174 (loaded the first time a PDF is used): it joins text pieces on each line (so a raised “-7” after “F” becomes “F-7”), keeps lines that are mostly chord symbols, and draws the pages. With no chord symbols in the text it renders up to 4 pages and runs OCR on them. The title is the clearly biggest text at the top of page 1, then the PDF's own title (ignored when it is just the app or author name, like “Claude”), then the file name.
 - `mytunes.js` stores My tunes in IndexedDB and handles export and import.
 - `index.html` is the page markup, `style.css` its styles, and `app.js` the page logic: building the sheet, rendering with [abcjs](https://www.abcjs.net/) 6.4.4, Web Audio playback (rootless piano voicings, a two-feel bass, hi-hat on 2 and 4, swing eighths), and the tune box, chart PDF and My tunes wiring.
 
