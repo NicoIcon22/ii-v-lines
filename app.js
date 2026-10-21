@@ -208,12 +208,12 @@ function generate(push){
     sec.innerHTML = `<div class="ghead"><h2>${esc(g.name)}</h2><span class="path">${esc(g.path)}</span></div><p class="gdesc">${esc(g.desc)}</p>`;
     g.lines.forEach((l,i)=>{
       const card = document.createElement("div");
-      card.className = "line" + (l.chords.length<3 ? " short" : "");
+      card.className = "line" + (l.chords.reduce((a,c)=>a+c.beats,0) <= 8 ? " short" : "");
       const label = l.level==="essential" ? "Essential" : "Bebop";
       const lenTag = (opts.len==="both" && g.id!=="chain") ? `<span class="tag len">${l.short ? "Short" : "Long"}</span>` : "";
       card.innerHTML = `<div class="lhead"><span class="tag ${l.level}">${label}</span>${lenTag}
         <button class="play" type="button" aria-label="Play ${esc(g.name)}, ${l.short ? "short " : ""}${label} line"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg><span>Play</span></button></div>
-        <div class="score"></div><p class="lnote">${l.note}</p>`;
+        <div class="scorewrap"><div class="score"></div></div><p class="lnote">${l.note}</p>`;
       sec.appendChild(card);
       const it = {l, card, score:card.querySelector(".score"), btn:card.querySelector(".play"), vo:null};
       items.push(it);
