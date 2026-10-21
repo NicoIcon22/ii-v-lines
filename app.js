@@ -51,13 +51,97 @@ function showOpts(){
 
 function keyLabel(k){ return E.prettyName(k.tonic) + (k.minor ? " minor" : ""); }
 
+/* ---------- names in the reading key ("Read for" B♭ / E♭) ----------
+   Text on the page (chord paths, section notes, the note under each line) is written in
+   the same key as the notation: concert, or up a major 2nd (B♭) or a major 6th (E♭). */
+const HORN = {0:[0,0], 2:[1,2], 9:[5,9]};
+const KEYS_OK = new Set(["C","G","D","A","E","B","F#","C#","F","Bb","Eb","Ab","Db","Gb","Cb"]);
+/* the written interval: a major 2nd / major 6th up, unless that lands the tune in a key
+   nobody writes (G♯, D♯...), then the enharmonic one (A♭, E♭...) */
+const noSig = () => !!(sheet && sheet.lib && sheet.lib.sig && sheet.source==="lib" && !sheet.transposed);
+function hornIv(){
+  const base = HORN[transpose] || [0,0];
+  if(!transpose || !sheet) return base;
+  const k = E.parseName(noSig() ? sheet.key.major : sheet.sigName);
+  if(KEYS_OK.has(E.nameStr(E.moveName(k, base[0], base[1])))) return base;
+  const alt = [base[0]+1, base[1]];
+  return KEYS_OK.has(E.nameStr(E.moveName(k, alt[0], alt[1]))) ? alt : base;
+}
+function hornN(n){
+  const [st, se] = hornIv();
+  const r = E.moveName(n, st, se);
+  return Math.abs(r.alter)>1 ? E.simplify(r) : r;
+}
+const hornName = n => E.prettyName(hornN(n));
+function hornChord(name){ const p = E.parseName(name); return p ? hornName(p) + E.prettyChord("C" + p.rest).slice(1) : name; }
+function hornKey(k){ return hornName(k.tonic) + (k.minor ? " minor" : ""); }
+function hornSigName(){
+  if(!transpose) return sheet.sigName;
+  if(noSig()) return "C";
+  let n = E.nameStr(hornN(E.parseName(sheet.sigName)));
+  if(!KEYS_OK.has(n)) n = E.nameStr(E.simplify(E.parseName(n)));
+  return n;
+}
+const hornSig = () => E.sigFor(hornSigName());
+/* the line as written for the horn: notes moved by the written interval, chords renamed */
+function hornLine(l){
+  if(!transpose) return l;
+  const [st, se] = hornIv();
+  const toks = l.toks.map(t=>{
+    if(t.t!=="note") return t;
+    let step = t.step + st; const midi = E.midiOf(t) + se;
+    let alter = midi - E.midiOf({step, alter:0});
+    /* never more than a double accidental: respell on the next letter */
+    while(alter > 2){ step++; alter = midi - E.midiOf({step, alter:0}); }
+    while(alter < -2){ step--; alter = midi - E.midiOf({step, alter:0}); }
+    return {t:"note", step, alter, dur:t.dur};
+  });
+  return {toks, chords: l.chords.map(c=>{ const p = E.parseName(c.name); return {name: E.nameStr(hornN(p)) + p.rest, beats:c.beats}; })};
+}
+/* chord and key names inside free text (the library's notes): a letter counts as a chord or
+   key name when it has an accidental or a chord suffix, is followed by "minor"/"major",
+   or comes right after an arrow; "the A section" or "bar 2" are left alone */
+function hornText(str){
+  if(!transpose || !str) return str;
+  return str.replace(/(^|[^A-Za-z0-9])([A-G])([♭♯]?)((?:maj7|maj9|m7♭5|m9|m7|m6|m11|m|7♭9|7♯9|7♭13|7alt|7|9|11|13|6|ø7?|°7?)?)(?![A-Za-z0-9♭♯])/g,
+    (m, pre, L, acc, suf, off, all)=>{
+      const after = all.slice(off + m.length), before = all.slice(0, off + pre.length);
+      if(!acc && !suf && !/^ (minor|major)\b/.test(after) && !/→\s*$/.test(before)) return m;
+      return pre + hornName(E.parseName(L + (acc==="♭" ? "b" : acc==="♯" ? "#" : ""))) + suf;
+    });
+}
+function lineNote(l){
+  if(!transpose) return l.note;
+  const tp = TPL[l.tid];
+  return tp ? E.realize(tp, hornN(l.root), hornSig()).note : l.note;
+}
+function groupPath(g){
+  const l = g.lines[0], ch = l.chords.map(c=>hornChord(c.name));
+  return l.short ? `${ch[0]} ${ch[1]} → ${ch[2]}` : ch.join(" → ");
+}
+
+/* V7 → I in the changes with no ii in front: practise it as a ii–V (the ii is added) */
+function impliedTargets(parsed, have){
+  const out = [], cs = parsed.chords, mod12 = x => ((x%12)+12)%12;
+  for(let i=0; i<cs.length-1; i++){
+    const v = cs[i], t = cs[i+1], prev = cs[i-1];
+    if(v.type!=="dom" || !(t.type==="maj" || t.type==="min") || mod12(E.pcOf(t.root)-E.pcOf(v.root))!==5) continue;
+    if(prev && (prev.type==="min" || prev.type==="hd") && mod12(E.pcOf(v.root)-E.pcOf(prev.root))===5) continue;
+    const minor = t.type==="min", id = E.pcOf(t.root) + (minor ? "m" : "");
+    if(have.some(x=>x.id===id) || out.some(x=>x.id===id)) continue;
+    out.push({id, root:E.simplify(t.root), minor, implied:true, from:E.prettyChord(E.nameStr(v.root)+v.q) + " → " + E.prettyChord(E.nameStr(t.root)+t.q)});
+  }
+  return out;
+}
+
 function buildSheet(){
   const typed = $("tune").value.trim();
   const lib = findTune(typed || "East of the Sun");
   const title = lib ? lib.t : typed;
   const chText = $("changes").value.trim();
   const parsed = chText ? E.parseChanges(chText) : null;
-  const usePaste = parsed && parsed.targets.length > 0;
+  const implied = parsed ? impliedTargets(parsed, parsed.targets) : [];
+  const usePaste = parsed && (parsed.targets.length + implied.length) > 0;
   const choice = $("key").value;
 
   /* source key and targets before any transposition */
@@ -65,7 +149,7 @@ function buildSheet(){
   if(usePaste){
     const h = parsed.home || {root:parsed.targets[0].root, minor:parsed.targets[0].minor};
     srcKey = E.parseKey(E.nameStr(h.root) + (h.minor ? "m" : ""));
-    targets = parsed.targets.map(t=>({root:t.root, minor:t.minor}));
+    targets = parsed.targets.map(t=>({root:t.root, minor:t.minor})).concat(implied.map(t=>({root:t.root, minor:t.minor, implied:t.from})));
     source = "paste";
   } else if(lib){
     srcKey = E.parseKey(lib.k);
@@ -92,7 +176,7 @@ function buildSheet(){
     if(source!=="default" && want.minor!==srcKey.minor) want = E.parseKey(E.nameStr(want.tonic) + (srcKey.minor ? "m" : ""));
     if(E.nameStr(want.tonic)!==E.nameStr(srcKey.tonic)){
       const iv = E.interval(srcKey.tonic, want.tonic);
-      targets = targets.map(t=>({root:E.simplify(E.moveName(t.root, iv.steps, iv.semis)), minor:t.minor}));
+      targets = targets.map(t=>({root:E.simplify(E.moveName(t.root, iv.steps, iv.semis)), minor:t.minor, implied:t.implied}));
       transposed = source!=="default";
       if(transposed) notes = null;
     }
@@ -134,7 +218,7 @@ function buildSheet(){
         tp = fresh[fi++]; if(!tp) return;
         if(!st || st.tid!==tp._id) lineState[slot] = {keep:false, oct:null, print:true, tid:tp._id};
       }
-      out.push({level, short, slot, kept: !!(lineState[slot].keep), ...E.realize(tp, root, sig)});
+      out.push({level, short, slot, root, tid:tp._id, kept: !!(lineState[slot].keep), ...E.realize(tp, root, sig)});
     });
     return out;
   };
@@ -159,9 +243,10 @@ function buildSheet(){
       : home ? `The ii–V back to the tonic, ${tname}. It closes sections and comes back in every turnaround.`
       : t.minor ? `A minor ii–V (half-diminished ii, ♭9 on the V) into ${tname}.`
       : `The ii–V to ${tname}. Use it wherever the chart moves to ${E.prettyName(t.root)}.`;
+    const impl = t.implied ? ` The chart has ${t.implied} with no ii in front; the ii is added here so you can practise the whole ii–V.` : "";
     const pc = lines[0].chords.map(c=>E.prettyChord(c.name));
     const path = lines[0].short ? `${pc[0]} ${pc[1]} → ${pc[2]}` : pc.join(" → ");
-    groups.push({id:gid, name, path, desc: wantShort && !wantLong ? desc + " Short lines: two beats per chord." : desc, lines, target:t});
+    groups.push({id:gid, name, path, desc: desc + impl + (wantShort && !wantLong ? " Short lines: two beats per chord." : ""), lines, target:t});
   });
 
   /* with long lines only, the home key also gets a one-bar (short) section, as before */
@@ -200,31 +285,34 @@ function generate(push){
   const meta = S.lib ? [S.lib.c + (S.lib.y ? ", " + S.lib.y : "")] : ["Custom tune"];
   meta.push(`Concert ${S.lib && S.lib.sig && !S.transposed && S.source==="lib" ? S.targets.map(t=>E.prettyName(t.root)).join(" / ") : keyTxt}`);
   if(S.lib && S.lib.s) meta.push(S.lib.s);
+  if(transpose) meta.push(`${transpose===2 ? "B♭" : "E♭"} instruments: ${hornKey(k)}`);
   $("eyebrow").textContent = meta.join(" · ");
 
   const count = S.groups.reduce((a,g)=>a+g.lines.length,0);
   const homeT = S.targets.find(t=>E.pcOf(t.root)===E.pcOf(k.tonic) && t.minor===k.minor);
-  const others = S.targets.filter(t=>t!==homeT).map(t=>E.prettyName(t.root) + (t.minor ? " minor" : ""));
+  const others = S.targets.filter(t=>t!==homeT).map(t=>hornName(t.root) + (t.minor ? " minor" : ""));
   const words = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen","Twenty"];
   let what = homeT
-    ? `the home ii–V into ${keyTxt}` + (others.length ? `, plus the moves toward ${listJoin(others)}` : "")
+    ? `the home ii–V into ${hornKey(k)}` + (others.length ? `, plus the moves toward ${listJoin(others)}` : "")
     : `the ii–Vs into ${listJoin(others)}`;
   const nw = (x, one, many) => x===1 ? (/^[aeiou]/.test(one) ? "an " : "a ") + one : `${["","","two","three"][x]} ${many}`;
   const parts = [];
   if(opts.e) parts.push(nw(opts.e, "essential line", "essential lines") + " built on chord tones");
   if(opts.b) parts.push(nw(opts.b, "bebop line", "bebop lines") + " with ♭9s, enclosures and chromatic passing tones");
   const lenTxt = opts.len==="short" ? ", two beats per chord" : opts.len==="both" ? ", in a long and a short version" : "";
-  $("lede").textContent = `${words[count]||count} lines for the ii–Vs in ${S.title}: ${what}. Each ii–V has ${parts.join(" and ")}${lenTxt}. Hit play to hear any line with a soft rhythm section, and switch the reading key for your horn.`;
+  $("lede").textContent = `${words[count]||count} lines for the ii–Vs in ${S.title}: ${what}. Each ii–V has ${parts.join(" and ")}${lenTxt}. Hit play to hear any line with a soft rhythm section, and switch the reading key for your horn.${transpose ? ` Chord and note names are for ${transpose===2 ? "B♭" : "E♭"} instruments, like the notation.` : ""}`;
 
   /* status line */
   let st;
   const n = S.targets.length;
-  if(S.source==="paste") st = `Found <b>${n} ii–V${n>1?"s":""}</b> in the changes.` + (S.lib ? ` Using them instead of the library's list for ${esc(S.lib.t)}.` : "");
+  const nImp = S.targets.filter(t=>t.implied).length;
+  const found = `<b>${n-nImp} ii–V${n-nImp===1?"":"s"}</b>` + (nImp ? ` and <b>${nImp} V–I${nImp===1?"":"s"}</b> (practised with the ii added)` : "");
+  if(S.source==="paste") st = (pdf ? `Using the chord changes from <b>${esc(pdf.name)}</b>: ${found}.` : `Found ${found} in the changes.`) + (S.lib ? ` They replace the library's list for ${esc(S.lib.t)}.` : "");
   else if(S.source==="lib") st = `<b>${esc(S.lib.t)}</b> is in the library: ${n} ii–V${n>1?"s":""} in ${keyTxt}${S.transposed ? `, transposed from ${esc(keyLabel(E.parseKey(S.lib.k)))}` : ""}. Pick another key to transpose, or paste your chart's changes to use those instead.`;
   else {
     const t = S.typed ? `“${esc(S.typed)}” isn't in the library yet, so these` : "These";
     st = `${t} are the common ii–Vs in ${keyTxt}: home, ${k.minor ? "the relative major and the iv" : "into ii, to IV and into vi"}. ${$("key").value ? "Paste" : "Choose the tune's key and paste"} its changes to get its exact ii–Vs.`;
-    if(S.parsed) st = `No ii–Vs found in the pasted changes (looking for a m7 or m7♭5 followed by a dominant 7th a fourth higher). ` + st;
+    if(S.parsed) st = `No ii–Vs or V–Is found in the ${pdf ? "chart's" : "pasted"} changes (looking for a m7 or m7♭5, or a dominant 7th, moving up a fourth). ` + st;
   }
   if(seed) st += ` Variation ${seed+1}.`;
   $("varyN").textContent = seed ? String(seed+1) : "";
@@ -236,7 +324,7 @@ function generate(push){
   S.groups.forEach(g=>{
     const sec = document.createElement("section");
     sec.className = "group"; sec.id = g.id;
-    sec.innerHTML = `<div class="ghead"><h2>${esc(g.name)}</h2><span class="path">${esc(g.path)}</span></div><p class="gdesc">${esc(g.desc)}</p>`;
+    sec.innerHTML = `<div class="ghead"><h2>${esc(g.name)}</h2><span class="path">${esc(groupPath(g))}</span></div><p class="gdesc">${esc(hornText(g.desc))}</p>`;
     g.lines.forEach((l,i)=>{
       const card = document.createElement("div");
       card.className = "line" + (l.chords.reduce((a,c)=>a+c.beats,0) <= 8 ? " short" : "");
@@ -252,7 +340,7 @@ function generate(push){
           <label class="chk mini" title="Include this line when printing"><input type="checkbox" class="prn"> Print</label>
           <button class="play" type="button" aria-label="Play ${esc(what)}"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg><span>Play</span></button>
         </div></div>
-        <div class="scorewrap"><div class="score"></div></div><p class="lnote">${l.note}</p>`;
+        <div class="scorewrap"><div class="score"></div></div><p class="lnote">${lineNote(l)}</p>`;
       sec.appendChild(card);
       const it = {l, card, sec, score:card.querySelector(".score"), btn:card.querySelector(".play"), vo:null};
       items.push(it);
@@ -306,17 +394,19 @@ async function handleFile(file){
   $("status").textContent = `Reading ${name}…`;
   pdf = {name, type:"application/pdf", blob:file};
   let r = null;
-  try{ r = await PDF.read(file, name); }
+  try{ r = await PDF.read(file, name, msg=>{ $("status").textContent = `${name}: ${msg} The first time, this downloads the OCR reader (about 10 MB).`; }); }
   catch(e){ pdfNote = `Couldn't read ${esc(name)}: ${esc(e.message || "unknown error")}.`; }
   if(r){
     if(r.title) $("tune").value = r.title;
     $("key").value = "";
     if(r.count){
       $("changes").value = r.changes; $("chgBox").open = true;
-      pdfNote = `Read <b>${r.count} chord symbols</b> from ${esc(name)}; they're in the changes box if you want to check or edit them.`;
+      pdfNote = r.ocr
+        ? `This is a scanned chart, so its ${r.count} chord symbols were read with OCR. Check them in the changes box against the chart below: OCR can misread chord symbols. Fix any mistakes and press Generate lines.`
+        : `Read ${r.count} chord symbols from the chart; they're in the changes box if you want to check or edit them.`;
     } else {
-      $("changes").value = "";
-      pdfNote = `No chord symbols found in the text of ${esc(name)} (a scanned chart has none). It's shown below; paste its changes to get its exact ii–Vs.`;
+      $("changes").value = ""; $("chgBox").open = true;
+      pdfNote = `Couldn't find any chord symbols in ${esc(name)}, even with OCR. Type its changes into the changes box from the chart below and press Generate lines; until then these lines don't come from the chart.`;
     }
   }
   seed = 0;
@@ -448,16 +538,18 @@ window.addEventListener("beforeprint", ()=>{ markPrint(); fillPrintInfo(); });
 
 function renderOne(it){
   if(!window.ABCJS || !sheet) return;
-  const head = `X:1\nM:4/4\nL:1/8\nK:${sheet.sigName}${clef==="bass" ? " clef=bass" : ""}\n`;
+  /* notation is written out in the reading key here (not with abcjs's visualTranspose), so
+     the chord symbols on the staff are spelled exactly like the text around them */
+  const head = `X:1\nM:4/4\nL:1/8\nK:${hornSigName()}${clef==="bass" ? " clef=bass" : ""}\n`;
   {
     const bars = it.l.chords.reduce((a,c)=>a+c.beats,0)/4;
     const opts = !narrow ? {staffwidth: bars>3 ? 820 : (bars>2 ? 660 : 480)}
       : bars>3 ? {staffwidth:520, wrap:{minSpacing:1, maxSpacing:2.4, preferredMeasuresPerLine:3}}
       : {staffwidth: bars>2 ? 520 : 400};
     const sh = octOf(it);
-    const src = head + E.lineAbc(it.l, sheet.sig, sh);
+    const src = head + E.lineAbc(hornLine(it.l), hornSig(), sh);
     it.vo = ABCJS.renderAbc(it.score, src, Object.assign(opts, {
-      responsive:"resize", add_classes:true, visualTranspose:transpose,
+      responsive:"resize", add_classes:true,
       paddingtop:4, paddingbottom:4, paddingleft:0, paddingright:2,
       foregroundColor:"currentColor",
       format:{gchordfont:"IBM Plex Mono 14", annotationfont:"Work Sans 12"}
@@ -605,7 +697,7 @@ function seg(id, attr, onPick){
 function setSeg(id, attr, val){
   document.querySelectorAll(`#${id} button`).forEach(x=>x.setAttribute("aria-pressed", x.dataset[attr]===String(val) ? "true":"false"));
 }
-seg("transpose","t", v=>{ transpose = +v; store.set("transpose", v); });
+seg("transpose","t", v=>{ transpose = +v; store.set("transpose", v); if(sheet) generate(false); });
 seg("clef","c", v=>{ clef = v; store.set("clef", v); });
 seg("octave","o", v=>{ octave = v; store.set("octave", v); });
 (function restore(){
