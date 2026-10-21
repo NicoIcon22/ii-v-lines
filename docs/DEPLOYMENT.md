@@ -21,4 +21,5 @@ Open `index.html` through any local web server, e.g. `python3 -m http.server` in
 
 - abcjs 6.4.4 from cdnjs (notation and timing)
 - pdf.js 3.11.174 from cdnjs (chart PDFs; loaded only when a PDF is used)
+- Tesseract.js 5.1.1 from jsDelivr (OCR for scanned charts; loaded only when a PDF has no readable chord text, about 10 MB the first time)
 - Google Fonts: Big Shoulders Display, Work Sans, IBM Plex Mono

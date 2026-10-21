@@ -3,8 +3,9 @@
  * pdf.js is loaded the first time a PDF is used. Chord symbols are found in the PDF's text
  * layer: text pieces on the same line are joined (so "F" followed by a raised "-7" becomes
  * "F-7"), and a line is kept only when most of its words look like chord symbols, which
- * drops titles, lyrics and copyright lines. Scanned charts have no text layer, so nothing
- * is read from them; they are still shown.
+ * drops titles, lyrics and copyright lines. Scanned charts have no text layer: their pages
+ * are drawn and read with OCR (Tesseract.js, loaded only then), and the same filter picks
+ * the chord lines out of what OCR finds.
  */
 (function(){
 const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
@@ -21,6 +22,18 @@ function lib(){
   });
   return loading;
 }
+const TESS = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+let tessLoading = null;
+function tess(){
+  if(window.Tesseract) return Promise.resolve(window.Tesseract);
+  if(!tessLoading) tessLoading = new Promise((res, rej)=>{
+    const s = document.createElement("script"); s.src = TESS;
+    s.onload = ()=> res(window.Tesseract);
+    s.onerror = ()=>{ tessLoading = null; rej(new Error("Couldn't load the OCR reader. Check your connection and try again.")); };
+    document.head.appendChild(s);
+  });
+  return tessLoading;
+}
 async function open(blob){
   const pdfjs = await lib();
   const data = new Uint8Array(await blob.arrayBuffer());
@@ -31,8 +44,23 @@ async function open(blob){
 const ACC = "(?:b|#|♭|♯)";
 const CHORD = new RegExp("^[A-G]" + ACC + "?(?:maj|ma|min|mi|m|M|dim|aug|sus|alt|add|[-+°øØoΔ∆^]|[0-9]|[()]|" + ACC + "|,)*(?:/[A-G]" + ACC + "?)?$");
 function cleanToken(t){
-  return t.replace(/[−–]/g,"-").replace(/[△Δ∆^]/g,"maj").replace(/Ø/g,"ø")
-    .replace(/^[|:\[\]{}]+|[|:\[\]{}.]+$/g,"");
+  return t.replace(/[−–—]/g,"-").replace(/[△Δ∆^]/g,"maj").replace(/Ø/g,"ø")
+    .replace(/^[|:\[\]{}/\\!Il1]+(?=[A-G])/,"").replace(/[|:\[\]{}.,;'"`]+$/g,"");
+}
+/* extra clean-up for OCR text: common misreads in chord symbols */
+function ocrToken(t){
+  return cleanToken(t.replace(/[‘’´`]/g,"").replace(/(?<=^[A-G])(?:»|>|\$)/,"b"))
+    .replace(/(?<=\d)[oO](?=$|\d)/,"0").replace(/(?<=^[A-G](?:b|#)?)(?:mi|min)(?=\d|$)/,"m");
+}
+function chordRows(lines, tok){
+  const rows = []; let count = 0;
+  lines.forEach(text=>{
+    const words = text.split(/\s+/).map(tok).filter(Boolean);
+    if(!words.length) return;
+    const chords = words.filter(isChord);
+    if(chords.length && chords.length >= words.length*0.5){ rows.push(chords.join(" ")); count += chords.length; }
+  });
+  return {rows, count};
 }
 const isChord = t => CHORD.test(t);
 
@@ -60,35 +88,76 @@ function linesOf(items){
   });
 }
 
-async function read(blob, filename){
+/* OCR every page (max 4) and return its text lines, top to bottom */
+async function ocrLines(doc, progress){
+  const T = await tess();
+  const worker = await T.createWorker("eng");
+  const out = [];
+  try{
+    const n = Math.min(doc.numPages, 4);
+    for(let p=1; p<=n; p++){
+      progress && progress(`Reading page ${p} of ${n} with OCR…`);
+      const page = await doc.getPage(p);
+      const base = page.getViewport({scale:1});
+      const vp = page.getViewport({scale: Math.min(3, 2200/base.width)});
+      const c = document.createElement("canvas"); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+      const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0,0,c.width,c.height);
+      await page.render({canvasContext:g, viewport:vp}).promise;
+      const r = await worker.recognize(c);
+      (r.data.text || "").split(/\n+/).forEach(t=>{ if(t.trim()) out.push(t); });
+    }
+  } finally { await worker.terminate(); }
+  return out;
+}
+
+const GENERIC_TITLE = /^(untitled|claude|document|scan|image|img[_ -]?\d*|microsoft.*|.*\.(pdf|docx?|png|jpe?g))$/i;
+async function read(blob, filename, progress){
   const doc = await open(blob);
-  const rows = []; let count = 0, titleGuess = "";
+  let textLines = [], titleGuess = "", allSizes = [], tops = [];
   for(let p=1; p<=doc.numPages; p++){
     const page = await doc.getPage(p);
     const tc = await page.getTextContent();
     const lines = linesOf(tc.items);
+    lines.forEach(l=>{ allSizes.push(l.size); textLines.push(l.text); });
     if(p===1){
-      /* the biggest text in the top third of page 1 is usually the title */
       const vp = page.getViewport({scale:1});
-      const top = lines.filter(l=> l.y > vp.height*0.66 && /[a-z]{2}/i.test(l.text));
-      const big = top.sort((a,b)=> b.size-a.size)[0];
-      if(big && !big.text.split(/\s+/).every(w=>isChord(cleanToken(w)))) titleGuess = big.text.trim();
+      tops = lines.filter(l=> l.y > vp.height*0.6 && /[a-z]{2}/i.test(l.text) && !l.text.split(/\s+/).every(w=>isChord(cleanToken(w))));
     }
-    lines.forEach(l=>{
-      const words = l.text.split(/\s+/).map(cleanToken).filter(Boolean);
-      if(!words.length) return;
-      const chords = words.filter(isChord);
-      if(chords.length && chords.length >= words.length*0.5){ rows.push(chords.join(" ")); count += chords.length; }
-    });
   }
-  let meta = "";
-  try{ const m = await doc.getMetadata(); meta = (m && m.info && m.info.Title || "").trim(); }catch(e){}
-  if(meta && !/untitled|\.pdf$|^microsoft|^document/i.test(meta)) titleGuess = meta;
+  /* title: the biggest text near the top of page 1, if it is clearly bigger than the rest */
+  allSizes.sort((a,b)=>a-b);
+  const median = allSizes.length ? allSizes[Math.floor(allSizes.length/2)] : 0;
+  const big = tops.sort((a,b)=> b.size-a.size)[0];
+  if(big && big.size >= median*1.35) titleGuess = big.text.trim();
+
+  let {rows, count} = chordRows(textLines, cleanToken), ocr = false;
+  if(!count){
+    /* no chord symbols in a text layer: a scanned chart, so read it with OCR */
+    let lines = [];
+    try{ lines = await ocrLines(doc, progress); }
+    catch(e){ doc.destroy(); throw e; }
+    ({rows, count} = chordRows(lines, ocrToken));
+    ocr = true;
+    /* title: the first line near the top that is words, not chords */
+    if(!titleGuess){
+      const t = lines.slice(0, 6).map(x=>x.trim()).find(x=> /[a-z]{3}/i.test(x) && x.length<=60 &&
+        x.split(/\s+/).filter(w=>isChord(ocrToken(w))).length < x.split(/\s+/).length/2);
+      if(t) titleGuess = t.replace(/[^\w\s'’&.,()?!-]/g,"").trim();
+    }
+  }
+
+  if(!titleGuess){
+    let meta = {};
+    try{ const m = await doc.getMetadata(); meta = (m && m.info) || {}; }catch(e){}
+    const t = (meta.Title || "").trim();
+    const generic = !t || GENERIC_TITLE.test(t) || [meta.Author, meta.Creator, meta.Producer].some(x=> x && x.trim().toLowerCase()===t.toLowerCase());
+    if(!generic) titleGuess = t;
+  }
   if(!titleGuess && filename) titleGuess = filename.replace(/\.pdf$/i,"").replace(/[_]+/g," ").replace(/\s+-\s+.*$/,"").trim();
   titleGuess = titleGuess.replace(/\s{2,}/g," ").slice(0,80);
   const pages = doc.numPages;
   doc.destroy();
-  return {changes: rows.join("\n"), count, title: titleGuess, pages};
+  return {changes: rows.join("\n"), count, title: titleGuess, pages, ocr};
 }
 
 /* draw every page into `box`, sized to its width */
