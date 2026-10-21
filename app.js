@@ -31,6 +31,9 @@ let seed = 0, sheet = null;
 let pdf = null;          /* {name, type, blob} attached to the tune on the page */
 let pdfNote = "";        /* one-off message after reading a PDF */
 let currentId = null, drawnBlob = null, tuneChangeP = null;
+/* the key and changes the lines on the page were generated from: on a tune switch, a box the
+   user hasn't touched since then belongs to the old tune and is cleared */
+let lastGen = {key:"", changes:""};
 /* per-line state, by slot ("t-3|bebop|l|0" = 1st long bebop line of the ii–V into E♭):
    {keep, oct (null = follow the Octave setting, else -1/0/1), print, tid (template id)}.
    It belongs to one tune/key/changes; switching to another starts fresh (or from My tunes). */
@@ -304,6 +307,7 @@ function listJoin(a){ return a.length<2 ? a.join("") : a.slice(0,-1).join(", ") 
 function generate(push){
   stop();
   sheet = buildSheet();
+  lastGen = {key:$("key").value, changes:$("changes").value.trim()};
   const S = sheet, k = S.key;
   const keyTxt = keyLabel(k);
   $("title").textContent = S.title;
@@ -734,7 +738,13 @@ seg("octave","o", v=>{ octave = v; store.set("octave", v); });
   const o = store.get("octave"); if(o==="low"||o==="orig"){ octave = o; setSeg("octave","o",o); }
 })();
 
-$("tuneForm").addEventListener("submit", async e=>{ e.preventDefault(); if(tuneChangeP) await tuneChangeP; seed = 0; generate(true); });
+$("tuneForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  /* Enter can come before the change event: switch first, so a new title never gets the old
+     tune's changes or chart */
+  if(await onTuneSwitch()) return;
+  seed = 0; generate(true);
+});
 $("pdfBtn").addEventListener("click", ()=> $("pdf").click());
 $("pdf").addEventListener("change", e=>{ const f = e.target.files[0]; e.target.value = ""; handleFile(f); });
 $("pdfRemove").addEventListener("click", ()=>{ pdf = null; generate(false); });
@@ -760,19 +770,42 @@ $("vary").addEventListener("click", ()=>{
   items.forEach(it=>{ if(it.l.note!==before[it.l.slot]) it.card.classList.add("fresh"); });
   setTimeout(()=> items.forEach(it=>it.card.classList.remove("fresh")), 800);
 });
-$("tune").addEventListener("change", ()=>{
-  /* Switching to another tune: a saved tune brings back its key, changes and PDF; a library
-     tune starts clean. A chart PDF belongs to its tune, so any other title clears the PDF
-     and the changes read from it. With no PDF, any other title counts as renaming the tune
-     on the page, so pasted changes stay. */
-  const v = $("tune").value, id = norm(v);
-  if(!id || (sheet && id===norm(sheet.title))) return;
-  tuneChangeP = MY.get(id).then(r=>{
-    if(r){ $("key").value = r.key || ""; $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes; pdf = r.pdf || null; pendingState = expandLines(r.lines); }
-    else if(findTune(v) || pdf){ $("key").value = ""; $("changes").value = ""; $("chgBox").open = false; pdf = null; }
-    showChart();
-    tuneChangeP = null;
-  });
+/* Switching to another tune. A tune saved in My tunes comes back with its key, changes, PDF
+   and line settings. Any other tune starts clean: the chart PDF belonged to the old tune and
+   goes, and so do the key and changes if they're still the ones the old lines came from
+   (changes pasted or a key picked since then are for the new tune and stay). New lines are
+   generated straight away, so the page never shows the old tune's progressions under the
+   new title. */
+const sameTune = v => {
+  if(!sheet) return false;
+  const lib = findTune(v);
+  return (lib && sheet.lib===lib) || norm(v)===norm(sheet.title);
+};
+async function switchTune(){
+  const v = $("tune").value;
+  if(!norm(v) || sameTune(v)) return false;
+  const r = await MY.get(norm(v));
+  if(r){
+    $("key").value = r.key || ""; $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes;
+    pdf = r.pdf || null; pendingState = expandLines(r.lines); seed = r.seed || 0;
+    if(r.opts){ opts = cleanOpts(r.opts); showOpts(); }
+  } else {
+    pdf = null; seed = 0;
+    if($("changes").value.trim()===lastGen.changes){ $("changes").value = ""; $("chgBox").open = false; }
+    if($("key").value===lastGen.key) $("key").value = "";
+  }
+  return true;
+}
+function onTuneSwitch(){
+  if(tuneChangeP) return tuneChangeP;
+  tuneChangeP = switchTune().then(did=>{ tuneChangeP = null; if(did) generate(true); return did; });
+  return tuneChangeP;
+}
+$("tune").addEventListener("change", onTuneSwitch);
+/* picking a suggestion, or typing a full library title, switches without waiting for Enter */
+$("tune").addEventListener("input", e=>{
+  const v = $("tune").value, lib = findTune(v);
+  if(e.inputType==="insertReplacementText" || !e.inputType || (lib && norm(lib.t)===norm(v))) onTuneSwitch();
 });
 
 /* initial state: URL, then last session, then East of the Sun */
