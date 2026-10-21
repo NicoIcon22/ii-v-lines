@@ -54,6 +54,34 @@ details.chg[open] summary{margin-bottom:8px}
 .hint{margin:6px 0 0;font-size:12.5px;color:var(--muted)}
 .status{grid-column:1/-1;margin:0;font-size:13.5px;color:var(--muted)}
 .status b{color:var(--ink);font-weight:600}
+form.tunebox.drag{outline:2px dashed var(--accent);outline-offset:3px}
+.btn.sm{font-size:13px;padding:6px 10px}
+.filerow{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.filerow .hint{margin:0}
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 13px var(--mono);border:1px solid var(--rule);border-radius:999px;padding:3px 4px 3px 12px;max-width:100%;min-width:0}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip button{border:0;background:transparent;color:var(--muted);font-size:17px;line-height:1;width:24px;height:24px;border-radius:50%;cursor:pointer}
+.chip button:hover{background:var(--rule);color:var(--ink)}
+details.mine{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:10px}
+details.mine summary{cursor:pointer;font-weight:600;font-size:14px;width:max-content;max-width:100%}
+details.mine summary .n{font:500 12px var(--mono);color:var(--muted);margin-left:4px}
+.mine-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.mine-tools input{flex:1 1 160px;font:500 14px var(--body);color:var(--ink);background:var(--field);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;min-width:0}
+ul.mine-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px;max-height:340px;overflow:auto}
+ul.mine-list li{display:flex;align-items:stretch;gap:6px}
+ul.mine-list .open{flex:1 1 0;width:0;min-width:0;text-align:left;background:transparent;color:var(--ink);border:1px solid var(--rule);border-radius:6px;padding:7px 10px;cursor:pointer;font:inherit}
+ul.mine-list .open:hover{border-color:var(--muted)}
+ul.mine-list .open[aria-current="true"]{border-color:var(--accent)}
+ul.mine-list .t{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ul.mine-list .m{display:block;font-size:12.5px;color:var(--muted)}
+ul.mine-list .del{flex:none;background:transparent;border:1px solid var(--rule);border-radius:6px;color:var(--muted);padding:0 10px;cursor:pointer;font:500 12.5px var(--body);min-width:36px}
+ul.mine-list .del.armed{color:var(--hl);border-color:var(--hl)}
+.empty{color:var(--muted);font-size:13.5px;margin:10px 0 0}
+details.chart{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 16px;margin-bottom:22px}
+details.chart summary{cursor:pointer;font-family:var(--display);font-weight:800;font-size:22px;text-transform:uppercase}
+details.chart summary small{font:500 12.5px var(--mono);color:var(--muted);text-transform:none;margin-left:8px}
+.pages{display:grid;gap:10px;margin-top:10px}
+.pages canvas{display:block;background:#fff;border:1px solid var(--rule);border-radius:4px}
 @media (max-width:640px){
   form.tunebox{grid-template-columns:1fr 1fr}
   .field.tune{grid-column:1/-1}
@@ -96,7 +124,7 @@ section.group:last-of-type{border-bottom:0}
 .play{margin-left:auto;font:600 13px var(--body);display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:7px 14px 7px 12px;cursor:pointer}
 .play svg{width:12px;height:12px;fill:currentColor}
 .play.on{background:var(--hl)}
-.play:focus-visible,.seg button:focus-visible,.chk input:focus-visible,input[type=range]:focus-visible,.btn:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.play:focus-visible,.seg button:focus-visible,.chk input:focus-visible,input[type=range]:focus-visible,.btn:focus-visible,summary:focus-visible,.open:focus-visible,.del:focus-visible,.chip button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .score{color:var(--ink);min-width:0;overflow-x:auto}
 .score svg{display:block}
 .line.short .score{max-width:560px}
@@ -134,7 +162,24 @@ footer a{color:inherit}
       <textarea id="changes" spellcheck="false" placeholder="| Gm7b5 | C7b9 | Fm7 | Bb7 | Ebmaj7 | ..."></textarea>
       <p class="hint">Any ii–V in what you paste gets its own lines: a m7 or m7♭5 followed by a dominant 7th a fourth higher. Bar lines and spacing don't matter. The Key menu then sets the home key; it doesn't transpose what you pasted.</p>
     </details>
+    <div class="filerow">
+      <button class="btn ghost sm" type="button" id="pdfBtn">Upload chart PDF</button>
+      <input id="pdf" type="file" accept="application/pdf,.pdf" hidden>
+      <span class="chip" id="pdfChip" hidden><span id="pdfName"></span><button type="button" id="pdfRemove" aria-label="Remove the PDF from this tune" title="Remove the PDF">×</button></span>
+      <p class="hint" id="pdfHint">Or drop a PDF here. The chord symbols are read from it and its pages are shown with the lines.</p>
+    </div>
     <p class="status" id="status" role="status" aria-live="polite"></p>
+    <details class="mine" id="mine">
+      <summary>My tunes <span class="n" id="mineCount"></span></summary>
+      <div class="mine-tools">
+        <input id="mineFilter" type="search" placeholder="Filter your tunes" aria-label="Filter your tunes">
+        <button class="btn ghost sm" type="button" id="exportBtn">Export list</button>
+        <button class="btn ghost sm" type="button" id="importBtn">Import</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+      <ul class="mine-list" id="mineList"></ul>
+      <p class="hint" id="mineHint">Every tune you generate is saved here in this browser, with its key, changes, variation and PDF. Export the list to keep a copy or move it to another device.</p>
+    </details>
   </form>
 </div>
 
@@ -144,6 +189,13 @@ footer a{color:inherit}
   <p class="lede"><span id="lede"></span>
   <small>Written an octave below the original lines, in treble clef at concert pitch, so the low notes sit on ledger lines under the staff. Use Octave to compare with the original, Clef for bass clef, and B♭ or E♭ to see the notes transposed. Playback follows the octave you pick.</small></p>
 </header>
+
+<div class="wrap" id="chartWrap" hidden>
+  <details class="chart" id="chart" open>
+    <summary>Your chart <small id="chartName"></small></summary>
+    <div class="pages" id="pages"></div>
+  </details>
+</div>
 
 <div class="bar" role="toolbar" aria-label="Playback and reading options">
   <div class="wrap">
@@ -195,9 +247,11 @@ footer a{color:inherit}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.4.4/abcjs-basic-min.js"></script>
 <script src="tunes.js"></script>
 <script src="lines.js"></script>
+<script src="pdfchart.js"></script>
+<script src="mytunes.js"></script>
 <script>
 (function(){
-const E = window.IIV, TUNES = window.TUNES;
+const E = window.IIV, TUNES = window.TUNES, MY = window.MYTUNES, PDF = window.PDFCHART;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 const store = {
@@ -221,6 +275,9 @@ function findTune(q){
 /* ---------- build the sheet ---------- */
 const ROMAN = ["I","♭II","II","♭III","III","IV","♯IV","V","♭VI","VI","♭VII","VII"];
 let seed = 0, sheet = null;
+let pdf = null;          /* {name, type, blob} attached to the tune on the page */
+let pdfNote = "";        /* one-off message after reading a PDF */
+let currentId = null, drawnBlob = null, tuneChangeP = null;
 
 function keyLabel(k){ return E.prettyName(k.tonic) + (k.minor ? " minor" : ""); }
 
@@ -350,7 +407,7 @@ function generate(push){
   /* status line */
   let st;
   const n = S.targets.length;
-  if(S.source==="paste") st = `Found <b>${n} ii–V${n>1?"s":""}</b> in the changes you pasted.` + (S.lib ? ` Using them instead of the library's list for ${esc(S.lib.t)}.` : "");
+  if(S.source==="paste") st = `Found <b>${n} ii–V${n>1?"s":""}</b> in the changes.` + (S.lib ? ` Using them instead of the library's list for ${esc(S.lib.t)}.` : "");
   else if(S.source==="lib") st = `<b>${esc(S.lib.t)}</b> is in the library: ${n} ii–V${n>1?"s":""} in ${keyTxt}${S.transposed ? `, transposed from ${esc(keyLabel(E.parseKey(S.lib.k)))}` : ""}. Pick another key to transpose, or paste your chart's changes to use those instead.`;
   else {
     const t = S.typed ? `“${esc(S.typed)}” isn't in the library yet, so these` : "These";
@@ -358,6 +415,7 @@ function generate(push){
     if(S.parsed) st = `No ii–Vs found in the pasted changes (looking for a m7 or m7♭5 followed by a dominant 7th a fourth higher). ` + st;
   }
   if(seed) st += ` Variation ${seed+1}.`;
+  if(pdfNote){ st += " " + pdfNote; pdfNote = ""; }
   $("status").innerHTML = st;
 
   /* sections */
@@ -391,7 +449,114 @@ function generate(push){
   const url = location.pathname + "?" + p.toString();
   try{ history[push ? "pushState" : "replaceState"](null, "", url); }catch(e){}
   store.set("last", p.toString());
+
+  showChart();
+  saveCurrent(S);
 }
+
+/* ---------- chart PDF ---------- */
+function showChart(){
+  const wrap = $("chartWrap"), box = $("pages");
+  if(pdf){
+    wrap.hidden = false;
+    $("chartName").textContent = pdf.name;
+    $("pdfName").textContent = pdf.name; $("pdfChip").hidden = false;
+    if(drawnBlob!==pdf.blob){
+      drawnBlob = pdf.blob;
+      PDF.draw(pdf.blob, box).catch(()=>{ box.innerHTML = `<p class="empty">This PDF couldn't be displayed.</p>`; });
+    }
+  } else {
+    wrap.hidden = true; box.innerHTML = ""; drawnBlob = null;
+    $("pdfChip").hidden = true; $("pdfName").textContent = "";
+  }
+}
+
+async function handleFile(file){
+  if(!file) return;
+  if(!/pdf$/i.test(file.type) && !/\.pdf$/i.test(file.name)){ $("status").textContent = `${file.name} isn't a PDF.`; return; }
+  if(file.size > 40*1024*1024){ $("status").textContent = `${file.name} is over 40 MB. Try a smaller export of the chart.`; return; }
+  const name = file.name || "chart.pdf";
+  $("status").textContent = `Reading ${name}…`;
+  pdf = {name, type:"application/pdf", blob:file};
+  let r = null;
+  try{ r = await PDF.read(file, name); }
+  catch(e){ pdfNote = `Couldn't read ${esc(name)}: ${esc(e.message || "unknown error")}.`; }
+  if(r){
+    if(r.title) $("tune").value = r.title;
+    $("key").value = "";
+    if(r.count){
+      $("changes").value = r.changes; $("chgBox").open = true;
+      pdfNote = `Read <b>${r.count} chord symbols</b> from ${esc(name)}; they're in the changes box if you want to check or edit them.`;
+    } else {
+      $("changes").value = "";
+      pdfNote = `No chord symbols found in the text of ${esc(name)} (a scanned chart has none). It's shown below; paste its changes to get its exact ii–Vs.`;
+    }
+  }
+  seed = 0;
+  generate(true);
+}
+
+/* ---------- my tunes ---------- */
+const fmtDate = t => new Date(t).toLocaleDateString(undefined, {month:"short", day:"numeric", year: new Date(t).getFullYear()===new Date().getFullYear() ? undefined : "numeric"});
+
+async function saveCurrent(S){
+  const id = norm(S.title); if(!id) return;
+  const cur = await MY.get(id), now = Date.now();
+  const rec = {id, title:S.title, key:$("key").value, changes:$("changes").value.trim(), seed,
+    pdf: pdf ? {name:pdf.name, type:pdf.type || "application/pdf", blob:pdf.blob} : null,
+    keyLabel: keyLabel(S.key), targets: S.targets.map(t=>E.prettyName(t.root) + (t.minor ? "m" : "")),
+    lib: !!S.lib, created: cur ? cur.created : now, updated: now};
+  const r = await MY.put(rec);
+  if(r==="nopdf") $("status").insertAdjacentText("beforeend", " This browser couldn't store the PDF, so the tune was saved without it.");
+  currentId = id;
+  renderMine();
+}
+
+async function renderMine(){
+  const list = await MY.all(), q = norm($("mineFilter").value || "");
+  $("mineCount").textContent = list.length ? `(${list.length})` : "";
+  const ul = $("mineList"); ul.innerHTML = "";
+  const shown = q ? list.filter(r=> r.id.includes(q)) : list;
+  if(!shown.length){ ul.innerHTML = `<li class="empty">${list.length ? "No tunes match." : "Nothing yet. Generate lines for a tune and it shows up here."}</li>`; return; }
+  shown.forEach(r=>{
+    const li = document.createElement("li");
+    const n = (r.targets||[]).length;
+    li.innerHTML = `<button type="button" class="open"${r.id===currentId ? ' aria-current="true"' : ""}><span class="t">${esc(r.title)}</span>
+      <span class="m">${esc(r.keyLabel||"")} · ${n} ii–V${n===1?"":"s"}${r.changes ? " · own changes" : ""}${r.pdf ? " · PDF" : ""}${r.seed ? ` · variation ${r.seed+1}` : ""} · ${fmtDate(r.updated)}</span></button>
+      <button type="button" class="del" aria-label="Delete ${esc(r.title)} from my tunes" title="Delete">×</button>`;
+    li.querySelector(".open").addEventListener("click", ()=> openRec(r));
+    const del = li.querySelector(".del"); let armed = null;
+    del.addEventListener("click", async ()=>{
+      if(!armed){ del.classList.add("armed"); del.textContent = "Delete?"; armed = setTimeout(()=>{ armed = null; del.classList.remove("armed"); del.textContent = "×"; }, 3000); return; }
+      clearTimeout(armed); await MY.del(r.id); if(currentId===r.id) currentId = null; renderMine();
+    });
+    ul.appendChild(li);
+  });
+}
+
+function openRec(r){
+  $("tune").value = r.title;
+  $("key").value = r.key || "";
+  $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes;
+  seed = r.seed || 0;
+  pdf = r.pdf || null;
+  generate(true);
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+$("mineFilter").addEventListener("input", renderMine);
+$("exportBtn").addEventListener("click", async ()=>{
+  const blob = await MY.exportAll(), a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `ii-v-lines-my-tunes-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+});
+$("importBtn").addEventListener("click", ()=> $("importFile").click());
+$("importFile").addEventListener("change", async e=>{
+  const f = e.target.files[0]; e.target.value = ""; if(!f) return;
+  try{ const r = await MY.importFile(f); $("status").textContent = `Imported ${r.added} new tune${r.added===1?"":"s"}${r.updated ? ` and updated ${r.updated}` : ""}.`; renderMine(); }
+  catch(err){ $("status").textContent = `Couldn't import ${f.name}: ${err.message}`; }
+});
 
 function octShift(){ return octave==="low" ? -1 : 0; }
 
@@ -551,11 +716,26 @@ seg("octave","o", v=>{ octave = v; store.set("octave", v); });
   const o = store.get("octave"); if(o==="low"||o==="orig"){ octave = o; setSeg("octave","o",o); }
 })();
 
-$("tuneForm").addEventListener("submit", e=>{ e.preventDefault(); seed = 0; generate(true); });
+$("tuneForm").addEventListener("submit", async e=>{ e.preventDefault(); if(tuneChangeP) await tuneChangeP; seed = 0; generate(true); });
+$("pdfBtn").addEventListener("click", ()=> $("pdf").click());
+$("pdf").addEventListener("change", e=>{ const f = e.target.files[0]; e.target.value = ""; handleFile(f); });
+$("pdfRemove").addEventListener("click", ()=>{ pdf = null; generate(false); });
+const form = $("tuneForm");
+["dragenter","dragover"].forEach(t=> form.addEventListener(t, e=>{ if([...(e.dataTransfer?.types||[])].includes("Files")){ e.preventDefault(); form.classList.add("drag"); } }));
+["dragleave","drop"].forEach(t=> form.addEventListener(t, e=>{ if(t==="dragleave" && form.contains(e.relatedTarget)) return; form.classList.remove("drag"); }));
+form.addEventListener("drop", e=>{ const f = e.dataTransfer?.files?.[0]; if(f){ e.preventDefault(); handleFile(f); } });
 $("vary").addEventListener("click", ()=>{ seed++; generate(false); });
 $("tune").addEventListener("change", ()=>{
-  /* picking a different library tune resets the key to that tune's key */
-  if(findTune($("tune").value)) $("key").value = "";
+  /* Switching to another tune: a saved tune brings back its key, changes and PDF; a library
+     tune starts clean. Any other title counts as renaming the tune on the page, so its
+     changes and PDF stay. */
+  const v = $("tune").value, id = norm(v);
+  if(!id || (sheet && id===norm(sheet.title))) return;
+  tuneChangeP = MY.get(id).then(r=>{
+    if(r){ $("key").value = r.key || ""; $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes; pdf = r.pdf || null; }
+    else if(findTune(v)){ $("key").value = ""; $("changes").value = ""; pdf = null; }
+    tuneChangeP = null;
+  });
 });
 
 /* initial state: URL, then last session, then East of the Sun */
@@ -566,10 +746,15 @@ function loadParams(qs){
   const ch = p.get("changes") || ""; $("changes").value = ch; if(ch) $("chgBox").open = true;
   const v = parseInt(p.get("v")||"1",10); seed = isFinite(v) && v>1 ? v-1 : 0;
 }
-loadParams(location.search.length>1 ? location.search : (store.get("last") || ""));
-window.addEventListener("popstate", ()=>{ loadParams(location.search); generate(false); });
+async function pdfFor(title){ const r = await MY.get(norm(title || "")); return r && r.pdf ? r.pdf : null; }
+window.addEventListener("popstate", async ()=>{ loadParams(location.search); pdf = await pdfFor($("tune").value); generate(false); });
 
-generate(false);
+(async function init(){
+  loadParams(location.search.length>1 ? location.search : (store.get("last") || ""));
+  pdf = await pdfFor($("tune").value);
+  generate(false);
+  if(!(await MY.persistent())) $("mineHint").textContent = "This browser isn't letting the page store data (a private window, perhaps), so the list only lasts until you close the page. Export it to keep a copy.";
+})();
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(renderAll);
 let rt;
 window.addEventListener("resize", ()=>{ clearTimeout(rt); rt = setTimeout(()=>{ if((window.innerWidth<560)!==narrow){ stop(); renderAll(); } }, 150); });
