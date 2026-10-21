@@ -9,7 +9,8 @@ The app is a static site (`index.html`, `style.css`, `app.js`, `lines.js`, `tune
 ## Updating
 
 1. Edit the files on `main` (on github.com, or locally and push).
-2. Pages rebuilds in a minute or two. Hard-refresh the page to see it.
+2. In `index.html`, bump the `?v=` tag on the `style.css` and `.js` links (for example `?v=20261021b` → `?v=20261022a`). Pages lets browsers cache files for 10 minutes, so without a new tag a visitor can get the new page with an old script.
+3. Pages rebuilds in a minute or two. Hard-refresh the page to see it.
 
 The Pages settings are under the repository's **Settings → Pages**.
 
