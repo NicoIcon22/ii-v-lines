@@ -2,8 +2,9 @@
  *
  * pdf.js is loaded the first time a PDF is used. Chord symbols are found in the PDF's text
  * layer: text pieces on the same line are joined (so "F" followed by a raised "-7" becomes
- * "F-7"), and a line is kept only when most of its words look like chord symbols, which
- * drops titles, lyrics and copyright lines. Scanned charts have no text layer: their pages
+ * "F-7"), chord-font characters from Sibelius and Finale are translated, notation glyphs
+ * printed as text are kept apart from the chords, and a line is kept only when most of its
+ * words look like chord symbols, which drops titles, lyrics and copyright lines. Scanned charts have no text layer: their pages
  * are drawn and read with OCR (Tesseract.js, loaded only then), and the same filter picks
  * the chord lines out of what OCR finds.
  */
@@ -43,9 +44,15 @@ async function open(blob){
 /* ---------- chord symbols ---------- */
 const ACC = "(?:b|#|♭|♯)";
 const CHORD = new RegExp("^[A-G]" + ACC + "?(?:maj|ma|min|mi|m|M|dim|aug|sus|alt|add|[-+°øØoΔ∆^]|[0-9]|[()]|" + ACC + "|,)*(?:/[A-G]" + ACC + "?)?$");
+/* Sibelius and Finale chord fonts (Opus Chords, Inkpen…) put their symbols on ordinary
+   characters: "‹" is the minor sign (E‹7 = Em7), "©" the sharp (F©7 = F♯7) and "Œ„Š" the
+   major-7th sign (CŒ„Š7 = Cmaj7) */
+function fontGlyphs(t){
+  return t.replace(/Œ„Š|Œ„|Œ/g,"maj").replace(/‹/g,"m").replace(/©/g,"#").replace(/[„Š]/g,"");
+}
 function cleanToken(t){
-  return t.replace(/[−–—]/g,"-").replace(/[△Δ∆^]/g,"maj").replace(/Ø/g,"ø")
-    .replace(/^[|:\[\]{}/\\!Il1]+(?=[A-G])/,"").replace(/[|:\[\]{}.,;'"`]+$/g,"");
+  return fontGlyphs(t).replace(/[−–—]/g,"-").replace(/[△Δ∆^]/g,"maj").replace(/Ø/g,"ø")
+    .replace(/^[^A-G]+(?=[A-G])/,"").replace(/[|:\[\]{}.,;'"`]+$/g,"").replace(/\)[#b♭♯]+$/,")");
 }
 /* extra clean-up for OCR text: common misreads in chord symbols */
 function ocrToken(t){
@@ -55,20 +62,31 @@ function ocrToken(t){
 function chordRows(lines, tok){
   const rows = []; let count = 0;
   lines.forEach(text=>{
-    const words = text.split(/\s+/).map(tok).filter(Boolean);
+    /* "7(b 5)": keep an alteration in brackets with its chord */
+    text = text.replace(/\(\s*([b#♭♯+-]?)\s*(\d+)\s*\)/g, "($1$2)").replace(/\(\s+/g,"(").replace(/\s+\)/g,")");
+    const words = text.split(/\s+/).map(tok).filter(w=> w && /[A-Za-z0-9]/.test(w));
     if(!words.length) return;
     const chords = words.filter(isChord);
-    if(chords.length && chords.length >= words.length*0.5){ rows.push(chords.join(" ")); count += chords.length; }
+    /* a short row of bare note names (E E A) is text about notes, not a chord line */
+    const bare = chords.every(c=> /^[A-G](b|#|♭|♯)?$/.test(c));
+    if(chords.length && chords.length >= words.length*0.5 && !(bare && chords.length < 4)){ rows.push(chords.join(" ")); count += chords.length; }
   });
   return {rows, count};
 }
 const isChord = t => CHORD.test(t);
 
+/* a text piece that can be (part of) a chord symbol: starts with a letter A–G, or is only
+   suffix characters ("-7", "(b 5)", "maj7"). Notation glyphs printed as text on the same line
+   (noteheads, rests, clefs, repeat signs) are left out so they don't stick to the chords. */
+const chordPiece = i => {
+  const s = fontGlyphs(i.str).trim();
+  return /^[(\[]*[A-G]/.test(s) || /^[-+°øØoΔ∆△^0-9()b#♭♯majinsudgtlM\/,.\s]+$/.test(s);
+};
 /* group text items into lines (top to bottom), joining pieces that touch */
-function linesOf(items){
+function linesOf(items, split){
   const its = items.filter(i=>i.str && i.str.trim()).map(i=>{
     const t = i.transform, size = Math.hypot(t[2], t[3]) || i.height || 10;
-    return {s:i.str, x:t[4], y:t[5], w:i.width || 0, size};
+    return {s:i.str, x:t[4], y:t[5], w:i.width || 0, size, chord: chordPiece(i)};
   }).sort((a,b)=> b.y-a.y || a.x-b.x);
   const lines = [];
   its.forEach(it=>{
@@ -79,10 +97,11 @@ function linesOf(items){
   lines.sort((a,b)=> b.y-a.y);
   return lines.map(l=>{
     l.items.sort((a,b)=> a.x-b.x);
-    let s = "", end = null;
+    let s = "", end = null, prev = null;
     l.items.forEach(it=>{
-      if(end!==null) s += (it.x - end > it.size*0.25) ? " " : "";
-      s += it.s; end = it.x + it.w;
+      /* with split, a chord piece never sticks to a notation glyph or a word next to it */
+      if(end!==null) s += (it.x - end > it.size*0.25 || (split && prev.chord!==it.chord)) ? " " : "";
+      s += it.s; end = it.x + it.w; prev = it;
     });
     return {text:s, size:l.size, y:l.y};
   });
@@ -118,7 +137,13 @@ async function read(blob, filename, progress){
     const page = await doc.getPage(p);
     const tc = await page.getTextContent();
     const lines = linesOf(tc.items);
-    lines.forEach(l=>{ allSizes.push(l.size); textLines.push(l.text); });
+    /* the usual text size, from words and chord symbols (not notation glyphs printed as text,
+       which can be much bigger and share a line with the chords) */
+    tc.items.forEach(i=>{
+      const t = (i.str || "").trim(); if(!t) return;
+      if(/[a-z]{2}/i.test(t) || /^[A-G]/.test(fontGlyphs(t))) allSizes.push(Math.hypot(i.transform[2], i.transform[3]) || i.height || 10);
+    });
+    linesOf(tc.items, true).forEach(l=> textLines.push(l.text));
     if(p===1){
       const vp = page.getViewport({scale:1});
       tops = lines.filter(l=> l.y > vp.height*0.6 && /[a-z]{2}/i.test(l.text) && !l.text.split(/\s+/).every(w=>isChord(cleanToken(w))));
@@ -154,7 +179,8 @@ async function read(blob, filename, progress){
     if(!generic) titleGuess = t;
   }
   if(!titleGuess && filename) titleGuess = filename.replace(/\.pdf$/i,"").replace(/[_]+/g," ").replace(/\s+-\s+.*$/,"").trim();
-  titleGuess = titleGuess.replace(/\s{2,}/g," ").slice(0,80);
+  titleGuess = titleGuess.replace(/\s*\((transcription|transcribed|lead ?sheet|chart|real book|melody|solo|concert|c version|bb version|eb version)\)\s*$/i,"")
+    .replace(/\s{2,}/g," ").trim().slice(0,80);
   const pages = doc.numPages;
   doc.destroy();
   return {changes: rows.join("\n"), count, title: titleGuess, pages, ocr};
@@ -181,5 +207,13 @@ async function draw(blob, box){
   doc.destroy();
 }
 
-window.PDFCHART = {read, draw, isChord};
+/* the text lines of every page, as the reader groups them (for checking a chart) */
+async function textLines(blob){
+  const doc = await open(blob), out = [];
+  for(let p=1; p<=doc.numPages; p++){ const page = await doc.getPage(p); linesOf((await page.getTextContent()).items, true).forEach(l=>out.push(l.text)); }
+  doc.destroy();
+  return out;
+}
+
+window.PDFCHART = {read, draw, isChord, textLines};
 })();
