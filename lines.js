@@ -346,7 +346,8 @@ function parseChanges(text){
   const hasBars = /\|/.test(text);
   const chords = [];
   let bar = 0;
-  text.replace(/[()\[\]%]/g," ").split(/\|/).forEach(seg=>{
+  /* alterations in brackets belong to their chord: "F#7(b5)" is F#7b5, "Cm(maj7)" Cm maj7 */
+  text.replace(/\(([^()|]*)\)/g, "$1").replace(/[()\[\]%]/g," ").split(/\|/).forEach(seg=>{
     const toks = seg.split(/[\s,;:]+/).filter(Boolean);
     let counted = false;
     toks.forEach(tok=>{
@@ -356,7 +357,9 @@ function parseChanges(text){
       const root = parseName(m[1].replace("♭","b").replace("♯","#"));
       const last = chords[chords.length-1];
       const c = {root, type: chordType(m[2]), q:m[2], bar: hasBars ? bar : 0};
-      if(last && pcOf(last.root)===pcOf(root) && last.type===c.type) return; /* repeated chord */
+      /* the same chord again (a ♭5 makes it a different one: F♯7♭9 → F♯7♭5 is V/V then iiø) */
+      const b5 = q => /(b|♭|-)5/.test(q);
+      if(last && pcOf(last.root)===pcOf(root) && last.type===c.type && b5(last.q)===b5(c.q)) return;
       chords.push(c);
     });
   });
@@ -366,6 +369,12 @@ function parseChanges(text){
      the ii–V doesn't resolve, and the I it points to is taken from the ii (m7 → major,
      m7♭5 → minor). A V–I with no ii, or chords moving any other way, gets nothing. */
   const IQ = {maj:"maj7", min:"m7", hd:"m7", dom:"7"};
+  /* a "7♭5" a fourth below a dominant is read as the half-diminished ii: charts (and
+     transcriptions) often write m7♭5 that way, as in F♯7(♭5) → B7 → Em7 */
+  chords.forEach((c,i)=>{
+    const n = chords[i+1];
+    if(c.type==="dom" && /^7(b|♭|-)5$/.test(c.q) && n && n.type==="dom" && mod(pcOf(n.root)-pcOf(c.root),12)===5) c.type = "hd";
+  });
   const iiVs = [];
   for(let i=0;i<chords.length-1;i++){
     const a = chords[i], b = chords[i+1];
