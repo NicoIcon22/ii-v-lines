@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ii–V Lines</title>
+<meta name="description" content="Practice ii–V lines for any jazz tune: notated, playable with a rhythm section, transposable for B♭ and E♭ horns.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a practice sheet — tune picker, record-sleeve masthead, a sticky transport bar, then one band per ii–V with stacked notated lines. */
+:root{
+  --paper:#f3f4f1;
+  --card:#ffffff;
+  --ink:#16181d;
+  --muted:#5b616b;
+  --rule:#d9dcd6;
+  --accent:#1d47c9;
+  --accent-ink:#ffffff;
+  --brass:#b5832a;
+  --hl:#d2361f;
+  --field:#ffffff;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Work Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111318;--card:#191c23;--ink:#eceee9;--muted:#9aa0aa;--rule:#2b2f38;--field:#14171d;
+  --accent:#7d9cff;--accent-ink:#0c0f16;--brass:#e0b260;--hl:#ff7a5c;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111318;--card:#191c23;--ink:#eceee9;--muted:#9aa0aa;--rule:#2b2f38;--field:#14171d;
+  --accent:#7d9cff;--accent-ink:#0c0f16;--brass:#e0b260;--hl:#ff7a5c;color-scheme:dark}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* tune picker */
+.picker{padding-top:max(20px,env(safe-area-inset-top,0px))}
+form.tunebox{display:grid;grid-template-columns:1fr auto auto auto;gap:10px 10px;align-items:end;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,textarea{font:500 15px var(--body);color:var(--ink);background:var(--field);border:1px solid var(--rule);border-radius:6px;padding:8px 10px;min-width:0;width:100%}
+.field select{padding-right:6px}
+textarea{font:14px/1.5 var(--mono);min-height:84px;resize:vertical}
+.btn{font:600 14px var(--body);border-radius:6px;padding:9px 14px;cursor:pointer;white-space:nowrap;border:1px solid var(--ink);background:var(--ink);color:var(--paper)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule)}
+details.chg{grid-column:1/-1}
+details.chg summary{cursor:pointer;font-size:13.5px;color:var(--muted);width:max-content;max-width:100%}
+details.chg[open] summary{margin-bottom:8px}
+.hint{margin:6px 0 0;font-size:12.5px;color:var(--muted)}
+.status{grid-column:1/-1;margin:0;font-size:13.5px;color:var(--muted)}
+.status b{color:var(--ink);font-weight:600}
+@media (max-width:640px){
+  form.tunebox{grid-template-columns:1fr 1fr}
+  .field.tune{grid-column:1/-1}
+  .field.key{grid-column:1/-1}
+}
+
+header.mast{padding-block:30px 26px;display:grid;gap:14px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(44px,10vw,92px);line-height:.9;margin:0;letter-spacing:-.01em;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere}
+h1 .sub{display:block;color:var(--accent)}
+.lede{max-width:62ch;margin:0;color:var(--ink)}
+.lede small{display:block;margin-top:8px;color:var(--muted);font-size:13px}
+
+.bar{position:sticky;top:0;z-index:5;background:var(--paper);border-block:1px solid var(--rule);padding-top:env(safe-area-inset-top,0px)}
+.bar .wrap{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding-block:10px}
+.ctl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.ctl label{white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{font:500 13px var(--body);background:transparent;color:var(--ink);border:0;padding:6px 10px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+input[type=range]{width:120px;accent-color:var(--accent)}
+.tempo-val{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);min-width:4.5ch}
+.chk{display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--ink)}
+.chk input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+
+main{display:grid;gap:8px;padding-block:20px 24px}
+section.group{display:grid;gap:14px;padding-block:22px;border-bottom:1px solid var(--rule)}
+section.group:last-of-type{border-bottom:0}
+.ghead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px}
+.ghead h2{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;margin:0;text-transform:uppercase;letter-spacing:.01em}
+.path{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:500}
+.gdesc{margin:0;color:var(--muted);max-width:66ch}
+
+.line{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 12px;display:grid;gap:6px;min-width:0}
+.lhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;border:1px solid currentColor}
+.tag.essential{color:var(--accent)}
+.tag.bebop{color:var(--brass)}
+.play{margin-left:auto;font:600 13px var(--body);display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:7px 14px 7px 12px;cursor:pointer}
+.play svg{width:12px;height:12px;fill:currentColor}
+.play.on{background:var(--hl)}
+.play:focus-visible,.seg button:focus-visible,.chk input:focus-visible,input[type=range]:focus-visible,.btn:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.score{color:var(--ink);min-width:0;overflow-x:auto}
+.score svg{display:block}
+.line.short .score{max-width:560px}
+.score .abcjs-note.hl,.score .abcjs-note.hl *{fill:var(--hl)!important;stroke:var(--hl)}
+.lnote{margin:0;font-size:13.5px;color:var(--muted);max-width:72ch}
+.lnote b{color:var(--ink);font-weight:600}
+
+aside.tips{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:18px 20px;display:grid;gap:8px}
+aside.tips h2{font-family:var(--display);font-weight:800;font-size:26px;margin:0;text-transform:uppercase}
+aside.tips ul{margin:0;padding-left:18px;display:grid;gap:6px;max-width:68ch}
+footer{padding-block:18px 40px;color:var(--muted);font-size:12.5px}
+footer p{margin:0 0 6px}
+footer a{color:inherit}
+@media (max-width:560px){.ghead h2{font-size:28px}.play{padding:7px 12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap picker">
+  <form class="tunebox" id="tuneForm" autocomplete="off">
+    <div class="field tune">
+      <label for="tune">Tune</label>
+      <input id="tune" list="tuneList" placeholder="Type a tune, e.g. Autumn Leaves" spellcheck="false">
+      <datalist id="tuneList"></datalist>
+    </div>
+    <div class="field key">
+      <label for="key">Key</label>
+      <select id="key"></select>
+    </div>
+    <button class="btn" type="submit">Generate lines</button>
+    <button class="btn ghost" type="button" id="vary" title="Swap in different lines for the same ii–Vs">New variations</button>
+    <details class="chg" id="chgBox">
+      <summary>Paste the chord changes (optional)</summary>
+      <textarea id="changes" spellcheck="false" placeholder="| Gm7b5 | C7b9 | Fm7 | Bb7 | Ebmaj7 | ..."></textarea>
+      <p class="hint">Any ii–V in what you paste gets its own lines: a m7 or m7♭5 followed by a dominant 7th a fourth higher. Bar lines and spacing don't matter. The Key menu then sets the home key; it doesn't transpose what you pasted.</p>
+    </details>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </form>
+</div>
+
+<header class="wrap mast">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1><span id="title"></span> <span class="sub">ii–V Lines</span></h1>
+  <p class="lede"><span id="lede"></span>
+  <small>Written an octave below the original lines, in treble clef at concert pitch, so the low notes sit on ledger lines under the staff. Use Octave to compare with the original, Clef for bass clef, and B♭ or E♭ to see the notes transposed. Playback follows the octave you pick.</small></p>
+</header>
+
+<div class="bar" role="toolbar" aria-label="Playback and reading options">
+  <div class="wrap">
+    <div class="ctl"><label>Read for</label>
+      <div class="seg" id="transpose">
+        <button type="button" data-t="0" aria-pressed="true">Concert</button>
+        <button type="button" data-t="2" aria-pressed="false">B♭</button>
+        <button type="button" data-t="9" aria-pressed="false">E♭</button>
+      </div>
+    </div>
+    <div class="ctl"><label>Clef</label>
+      <div class="seg" id="clef">
+        <button type="button" data-c="treble" aria-pressed="true">Treble</button>
+        <button type="button" data-c="bass" aria-pressed="false">Bass</button>
+      </div>
+    </div>
+    <div class="ctl"><label>Octave</label>
+      <div class="seg" id="octave">
+        <button type="button" data-o="low" aria-pressed="true">Octave lower</button>
+        <button type="button" data-o="orig" aria-pressed="false">Original</button>
+      </div>
+    </div>
+    <div class="ctl"><label for="tempo">Tempo</label><input id="tempo" type="range" min="70" max="260" step="5" value="140"><span class="tempo-val" id="tempoVal">140</span></div>
+    <label class="chk"><input type="checkbox" id="swing" checked> Swing</label>
+    <label class="chk"><input type="checkbox" id="comp" checked> Piano &amp; bass</label>
+    <label class="chk"><input type="checkbox" id="loop"> Loop</label>
+  </div>
+</div>
+
+<main class="wrap" id="main"></main>
+
+<div class="wrap">
+  <aside class="tips">
+    <h2>Getting them into the tune</h2>
+    <ul>
+      <li>Learn each line slowly with the loop on, then take it up to tune tempo. Sing the last two notes of every bar; that is the voice leading you are after.</li>
+      <li>Match the line to the rhythm of your chart. Where the ii and the V share a bar, use the one-bar lines; where each chord gets a full bar, use the two-bar ones.</li>
+      <li>Move the start point. Begin a line on beat 3 of the previous bar, or drop the first two notes, so it doesn't always sound like an exercise.</li>
+      <li>Mix halves. The ii half of one line and the V half of another almost always connect, because each bar ends a step away from a chord tone.</li>
+      <li>Hit New variations to get different lines for the same ii–Vs.</li>
+    </ul>
+  </aside>
+</div>
+<footer class="wrap">
+  <p>Lines are original practice material generated from templates and transposed to each ii–V. <span id="range"></span></p>
+  <p>Tune keys follow common fake-book keys and the ii–V lists cover each tune's main cadences. If your chart differs, change the key or paste its changes.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.4.4/abcjs-basic-min.js"></script>
+<script src="tunes.js"></script>
+<script src="lines.js"></script>
+<script>
+(function(){
+const E = window.IIV, TUNES = window.TUNES;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const store = {
+  get(k){ try{ return localStorage.getItem("iiv-"+k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem("iiv-"+k, v); }catch(e){} }
+};
+
+/* ---------- pickers ---------- */
+const MAJ_KEYS = ["C","Db","D","Eb","E","F","F#","Gb","G","Ab","A","Bb","B"];
+const MIN_KEYS = ["Cm","C#m","Dm","Ebm","Em","Fm","F#m","Gm","G#m","Am","Bbm","Bm"];
+const pk = k => E.prettyChord(k.replace(/m$/,"")) + (/m$/.test(k) ? " minor" : " major");
+$("key").innerHTML = `<option value="">Tune's key</option><optgroup label="Major">${MAJ_KEYS.map(k=>`<option value="${k}">${pk(k)}</option>`).join("")}</optgroup><optgroup label="Minor">${MIN_KEYS.map(k=>`<option value="${k}">${pk(k)}</option>`).join("")}</optgroup>`;
+$("tuneList").innerHTML = TUNES.map(t=>`<option value="${esc(t.t)}"></option>`).join("");
+
+const norm = s => s.toLowerCase().replace(/♭/g,"b").replace(/♯/g,"#").replace(/^the\s+/,"").replace(/[^a-z0-9#]+/g," ").trim();
+function findTune(q){
+  const n = norm(q); if(!n) return null;
+  return TUNES.find(t=> norm(t.t)===n || (t.aka||[]).some(a=>norm(a)===n)) || null;
+}
+
+/* ---------- build the sheet ---------- */
+const ROMAN = ["I","♭II","II","♭III","III","IV","♯IV","V","♭VI","VI","♭VII","VII"];
+let seed = 0, sheet = null;
+
+function keyLabel(k){ return E.prettyName(k.tonic) + (k.minor ? " minor" : ""); }
+
+function buildSheet(){
+  const typed = $("tune").value.trim();
+  const lib = findTune(typed || "East of the Sun");
+  const title = lib ? lib.t : typed;
+  const chText = $("changes").value.trim();
+  const parsed = chText ? E.parseChanges(chText) : null;
+  const usePaste = parsed && parsed.targets.length > 0;
+  const choice = $("key").value;
+
+  /* source key and targets before any transposition */
+  let srcKey, targets, notes = null, source;
+  if(usePaste){
+    const h = parsed.home || {root:parsed.targets[0].root, minor:parsed.targets[0].minor};
+    srcKey = E.parseKey(E.nameStr(h.root) + (h.minor ? "m" : ""));
+    targets = parsed.targets.map(t=>({root:t.root, minor:t.minor}));
+    source = "paste";
+  } else if(lib){
+    srcKey = E.parseKey(lib.k);
+    targets = lib.ii.map(s=>{ const m = /m$/.test(s); return {root:E.parseName(m ? s.slice(0,-1) : s), minor:m}; });
+    notes = lib.n || null;
+    source = "lib";
+  } else {
+    srcKey = E.parseKey(choice || "C");
+    const t = srcKey.tonic;
+    targets = srcKey.minor
+      ? [{root:t, minor:true}, {root:E.moveName(t,2,3), minor:false}, {root:E.moveName(t,3,5), minor:true}]
+      : [{root:t, minor:false}, {root:E.moveName(t,1,2), minor:true}, {root:E.moveName(t,3,5), minor:false}, {root:E.moveName(t,5,9), minor:true}];
+    source = "default";
+  }
+
+  /* transpose to the chosen key */
+  let key = srcKey, transposed = false;
+  if(choice && source==="paste"){
+    /* with pasted changes the menu names the home key; the ii–Vs stay where the changes put them */
+    key = E.parseKey(choice);
+  } else if(choice){
+    /* the menu picks the tonic; a known tune keeps its own mode (a major tune stays major) */
+    let want = E.parseKey(choice);
+    if(source!=="default" && want.minor!==srcKey.minor) want = E.parseKey(E.nameStr(want.tonic) + (srcKey.minor ? "m" : ""));
+    if(E.nameStr(want.tonic)!==E.nameStr(srcKey.tonic)){
+      const iv = E.interval(srcKey.tonic, want.tonic);
+      targets = targets.map(t=>({root:E.simplify(E.moveName(t.root, iv.steps, iv.semis)), minor:t.minor}));
+      transposed = source!=="default";
+      if(transposed) notes = null;
+    }
+    key = want;
+  }
+  const sigName = (lib && source==="lib" && !transposed && lib.sig) ? lib.sig : key.major;
+  const sig = E.sigFor(sigName);
+
+  /* home target first */
+  const isHome = t => E.pcOf(t.root)===E.pcOf(key.tonic) && t.minor===key.minor;
+  const hi = targets.findIndex(isHome);
+  if(hi>0){ const [h] = targets.splice(hi,1); targets.unshift(h); if(notes){ notes = notes.slice(); const [n] = notes.splice(hi,1); notes.unshift(n); } }
+
+  /* groups */
+  const groups = []; const used = {major:0, minor:0};
+  targets.forEach((t,i)=>{
+    const mode = t.minor ? "minor" : "major", pool = E.T[mode], c = used[mode]++;
+    const pick = arr => arr[(c + seed) % arr.length];
+    const lines = [
+      {level:"essential", ...E.realize(pick(pool.essential), t.root, sig)},
+      {level:"bebop", ...E.realize(pick(pool.bebop), t.root, sig)}
+    ];
+    const semis = (E.pcOf(t.root) - E.pcOf(key.tonic) + 12) % 12;
+    const rn = t.minor ? ROMAN[semis].toLowerCase() : ROMAN[semis];
+    const tname = E.prettyName(t.root) + (t.minor ? " minor" : "");
+    const home = isHome(t);
+    const name = home ? "Home ii–V" : (t.minor ? `Into ${rn}` : `To ${rn}`);
+    const desc = (notes && notes[i]) ? notes[i]
+      : home ? `The ii–V back to the tonic, ${tname}. It closes sections and comes back in every turnaround.`
+      : t.minor ? `A minor ii–V (half-diminished ii, ♭9 on the V) into ${tname}.`
+      : `The ii–V to ${tname}. Use it wherever the chart moves to ${E.prettyName(t.root)}.`;
+    groups.push({id:"g"+i, name, path: lines[0].chords.map(c=>E.prettyChord(c.name)).join(" → "), desc, lines, target:t});
+  });
+
+  /* one-bar ii–V and the chain, in the home key */
+  const fast = E.T[key.minor ? "fastMinor" : "fastMajor"];
+  const fl = [
+    {level:"essential", ...E.realize(fast.essential[seed % fast.essential.length], key.tonic, sig)},
+    {level:"bebop", ...E.realize(fast.bebop[seed % fast.bebop.length], key.tonic, sig)}
+  ];
+  const fc = fl[0].chords.map(c=>E.prettyChord(c.name));
+  groups.push({id:"fast", name:"One-bar ii–V", path:`${fc[0]} ${fc[1]} → ${fc[2]}`,
+    desc:"Two beats per chord, for bars where the changes move twice as fast.", lines:fl});
+  if(!key.minor){
+    const cl = [{level:"bebop", ...E.realize(E.T.chain.bebop[0], key.tonic, sig)}];
+    groups.push({id:"chain", name:"The full chain", path: cl[0].chords.map(c=>E.prettyChord(c.name)).join(" → "),
+      desc:"The minor ii–V into the ii chord, then the home ii–V, one bar per chord, as one continuous line.", lines:cl});
+  }
+
+  return {title, lib, key, sigName, sig, groups, targets, source, transposed, parsed, typed};
+}
+
+/* ---------- render page ---------- */
+let clef = "treble", octave = "low", transpose = 0, narrow = window.innerWidth < 560;
+const main = $("main");
+let items = [];
+
+function listJoin(a){ return a.length<2 ? a.join("") : a.slice(0,-1).join(", ") + " and " + a[a.length-1]; }
+
+function generate(push){
+  stop();
+  sheet = buildSheet();
+  const S = sheet, k = S.key;
+  const keyTxt = keyLabel(k);
+  $("title").textContent = S.title;
+  if(S.lib) $("tune").value = S.lib.t;
+  document.title = `${S.title} ii–V Lines`;
+  const meta = S.lib ? [S.lib.c + (S.lib.y ? ", " + S.lib.y : "")] : ["Custom tune"];
+  meta.push(`Concert ${S.lib && S.lib.sig && !S.transposed && S.source==="lib" ? S.targets.map(t=>E.prettyName(t.root)).join(" / ") : keyTxt}`);
+  if(S.lib && S.lib.s) meta.push(S.lib.s);
+  $("eyebrow").textContent = meta.join(" · ");
+
+  const count = S.groups.reduce((a,g)=>a+g.lines.length,0);
+  const homeT = S.targets.find(t=>E.pcOf(t.root)===E.pcOf(k.tonic) && t.minor===k.minor);
+  const others = S.targets.filter(t=>t!==homeT).map(t=>E.prettyName(t.root) + (t.minor ? " minor" : ""));
+  const words = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen","Twenty"];
+  let what = homeT
+    ? `the home ii–V into ${keyTxt}` + (others.length ? `, plus the moves toward ${listJoin(others)}` : "")
+    : `the ii–Vs into ${listJoin(others)}`;
+  $("lede").textContent = `${words[count]||count} lines for the ii–Vs in ${S.title}: ${what}. Each ii–V has an essential line built on chord tones and a bebop line with ♭9s, enclosures and chromatic passing tones. Hit play to hear any line with a soft rhythm section, and switch the reading key for your horn.`;
+
+  /* status line */
+  let st;
+  const n = S.targets.length;
+  if(S.source==="paste") st = `Found <b>${n} ii–V${n>1?"s":""}</b> in the changes you pasted.` + (S.lib ? ` Using them instead of the library's list for ${esc(S.lib.t)}.` : "");
+  else if(S.source==="lib") st = `<b>${esc(S.lib.t)}</b> is in the library: ${n} ii–V${n>1?"s":""} in ${keyTxt}${S.transposed ? `, transposed from ${esc(keyLabel(E.parseKey(S.lib.k)))}` : ""}. Pick another key to transpose, or paste your chart's changes to use those instead.`;
+  else {
+    const t = S.typed ? `“${esc(S.typed)}” isn't in the library yet, so these` : "These";
+    st = `${t} are the common ii–Vs in ${keyTxt}: home, ${k.minor ? "the relative major and the iv" : "into ii, to IV and into vi"}. ${$("key").value ? "Paste" : "Choose the tune's key and paste"} its changes to get its exact ii–Vs.`;
+    if(S.parsed) st = `No ii–Vs found in the pasted changes (looking for a m7 or m7♭5 followed by a dominant 7th a fourth higher). ` + st;
+  }
+  if(seed) st += ` Variation ${seed+1}.`;
+  $("status").innerHTML = st;
+
+  /* sections */
+  main.innerHTML = ""; items = [];
+  S.groups.forEach(g=>{
+    const sec = document.createElement("section");
+    sec.className = "group"; sec.id = g.id;
+    sec.innerHTML = `<div class="ghead"><h2>${esc(g.name)}</h2><span class="path">${esc(g.path)}</span></div><p class="gdesc">${esc(g.desc)}</p>`;
+    g.lines.forEach((l,i)=>{
+      const card = document.createElement("div");
+      card.className = "line" + (l.chords.length<3 ? " short" : "");
+      const label = l.level==="essential" ? "Essential" : "Bebop";
+      card.innerHTML = `<div class="lhead"><span class="tag ${l.level}">${label}</span>
+        <button class="play" type="button" aria-label="Play ${esc(g.name)}, ${label} line"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg><span>Play</span></button></div>
+        <div class="score"></div><p class="lnote">${l.note}</p>`;
+      sec.appendChild(card);
+      const it = {l, card, score:card.querySelector(".score"), btn:card.querySelector(".play"), vo:null};
+      items.push(it);
+      it.btn.addEventListener("click", ()=> (playing && playing.it===it) ? stop() : play(it));
+    });
+    main.appendChild(sec);
+  });
+  renderAll();
+
+  /* url + memory */
+  const p = new URLSearchParams();
+  p.set("tune", S.title);
+  if($("key").value) p.set("key", $("key").value);
+  if($("changes").value.trim()) p.set("changes", $("changes").value.trim());
+  if(seed) p.set("v", String(seed+1));
+  const url = location.pathname + "?" + p.toString();
+  try{ history[push ? "pushState" : "replaceState"](null, "", url); }catch(e){}
+  store.set("last", p.toString());
+}
+
+function octShift(){ return octave==="low" ? -1 : 0; }
+
+function renderAll(){
+  if(!window.ABCJS || !sheet) return;
+  narrow = window.innerWidth < 560;
+  const head = `X:1\nM:4/4\nL:1/8\nK:${sheet.sigName}${clef==="bass" ? " clef=bass" : ""}\n`;
+  let lo = null, hi = null;
+  items.forEach(it=>{
+    const bars = it.l.chords.reduce((a,c)=>a+c.beats,0)/4;
+    const opts = !narrow ? {staffwidth: bars>3 ? 820 : (bars>2 ? 660 : 480)}
+      : bars>3 ? {staffwidth:520, wrap:{minSpacing:1, maxSpacing:2.4, preferredMeasuresPerLine:3}}
+      : {staffwidth: bars>2 ? 520 : 400};
+    const src = head + E.lineAbc(it.l, sheet.sig, octShift());
+    it.vo = ABCJS.renderAbc(it.score, src, Object.assign(opts, {
+      responsive:"resize", add_classes:true, visualTranspose:transpose,
+      paddingtop:4, paddingbottom:4, paddingleft:0, paddingright:2,
+      foregroundColor:"currentColor",
+      format:{gchordfont:"IBM Plex Mono 14", annotationfont:"Work Sans 12"}
+    }))[0];
+    it.events = E.lineEvents(it.l, octShift());
+    it.l.toks.forEach(t=>{
+      if(t.t!=="note") return;
+      const n = {step:t.step + 7*octShift(), alter:t.alter}, m = E.midiOf(n);
+      if(!lo || m < lo.m) lo = {m, n};
+      if(!hi || m > hi.m) hi = {m, n};
+    });
+  });
+  const nm = x => E.LET[((x.n.step%7)+7)%7] + E.glyph(x.n.alter) + Math.floor(x.n.step/7);
+  $("range").textContent = lo ? `${octave==="low" ? "In the lower octave" : "In the original octave"} the notes run from ${nm(lo)} to ${nm(hi)} concert.` : "";
+}
+
+/* ---------- audio ---------- */
+let ctx = null, master = null, playing = null;
+function ensureCtx(){
+  if(!ctx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.8;
+    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+  }
+  if(ctx.state==="suspended") ctx.resume();
+}
+const hz = m => 440*Math.pow(2,(m-69)/12);
+
+function tone(m, t, dur, opts, bag){
+  const o = opts||{}; const g = ctx.createGain();
+  const peak = o.vol||0.18, a = o.attack||0.012;
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(peak,t+a);
+  g.gain.exponentialRampToValueAtTime(peak*(o.sustain||0.55),t+a+0.12);
+  g.gain.setValueAtTime(peak*(o.sustain||0.55),Math.max(t+a+0.12,t+dur-0.04));
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur+(o.release||0.06));
+  const f = ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value = o.cutoff||2600;
+  g.connect(f); f.connect(master);
+  (o.waves||["triangle"]).forEach((w,i)=>{
+    const osc = ctx.createOscillator(); osc.type = w;
+    osc.frequency.value = hz(m) * (i===1 && o.octave ? 2 : 1);
+    if(i>0){ const g2=ctx.createGain(); g2.gain.value=o.mix||0.25; osc.connect(g2); g2.connect(g); }
+    else osc.connect(g);
+    osc.start(t); osc.stop(t+dur+(o.release||0.06)+0.05); bag.push(osc);
+  });
+}
+function tick(t, vol, bag, hi){
+  const len = 0.05, buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate*len), ctx.sampleRate);
+  const d = buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+  const s = ctx.createBufferSource(); s.buffer=buf;
+  const f = ctx.createBiquadFilter(); f.type="highpass"; f.frequency.value = hi?7000:3500;
+  const g = ctx.createGain(); g.gain.value = vol;
+  s.connect(f); f.connect(g); g.connect(master); s.start(t); bag.push(s);
+}
+function swingBeat(b, on){
+  if(!on) return b;
+  const s = 2/3, base = Math.floor(b+1e-9), fr = b-base;
+  return base + (fr<0.5 ? fr*(s/0.5) : s+(fr-0.5)*((1-s)/0.5));
+}
+
+function play(it){
+  stop(); ensureCtx();
+  const bpm = +$("tempo").value, sw = $("swing").checked, compOn = $("comp").checked;
+  const spb = 60/bpm, bag = [], timers = [];
+  const t0 = ctx.currentTime + 0.12, start = t0 + 4*spb;
+  for(let i=0;i<4;i++) tick(t0+i*spb, i===0?0.5:0.32, bag, false);
+
+  it.events.forEach(e=>{
+    const b0 = swingBeat(e.start, sw), b1 = swingBeat(e.start+e.dur, sw);
+    const dur = Math.max(0.06,(b1-b0)*spb*0.92);
+    tone(e.pitch, start+b0*spb, dur, {vol:0.2, waves:["triangle","sine"], octave:true, mix:0.18, sustain:0.6, cutoff:3200}, bag);
+  });
+
+  let beat = 0;
+  it.l.chords.forEach(c=>{
+    const len = c.beats, v = E.voicing(c.name);
+    if(compOn){
+      v.notes.forEach(m=> tone(m, start+beat*spb, len*spb*0.9, {vol:0.04, waves:["sine","triangle"], mix:0.3, sustain:0.45, release:0.25, cutoff:1800}, bag));
+      tone(v.root, start+beat*spb, (len>=4?2:len)*spb*0.9, {vol:0.22, waves:["sine","triangle"], mix:0.2, sustain:0.6, cutoff:700}, bag);
+      if(len>=4) tone(v.fifth, start+(beat+2)*spb, 2*spb*0.9, {vol:0.2, waves:["sine","triangle"], mix:0.2, sustain:0.6, cutoff:700}, bag);
+    }
+    for(let k=0;k<len;k++){ if((beat+k)%2===1) tick(start+(beat+k)*spb, 0.12, bag, true); }
+    beat += len;
+  });
+
+  /* highlight notes on the displayed score */
+  let last = [];
+  if(it.vo){
+    const timing = new ABCJS.TimingCallbacks(it.vo, {qpm:120});
+    const now = ctx.currentTime;
+    timing.noteTimings.forEach(ev=>{
+      if(ev.type!=="event" || !ev.elements) return;
+      const b = swingBeat(ev.milliseconds/500, sw);
+      const at = (start + b*spb - now)*1000;
+      timers.push(setTimeout(()=>{
+        last.forEach(el=>el.classList.remove("hl"));
+        last = [].concat(...ev.elements).filter(Boolean);
+        last.forEach(el=>el.classList.add("hl"));
+      }, Math.max(0,at)));
+    });
+  }
+  const endMs = (start + beat*spb - ctx.currentTime)*1000;
+  timers.push(setTimeout(()=>{
+    last.forEach(el=>el.classList.remove("hl"));
+    if($("loop").checked && playing && playing.it===it) play(it); else stop();
+  }, endMs + 60));
+
+  playing = {it, bag, timers, clear:()=>last.forEach(el=>el.classList.remove("hl"))};
+  it.btn.classList.add("on"); it.btn.querySelector("span").textContent = "Stop";
+}
+
+function stop(){
+  if(!playing) return;
+  playing.timers.forEach(clearTimeout);
+  playing.bag.forEach(n=>{ try{ n.stop(); }catch(e){} });
+  playing.clear();
+  const b = playing.it.btn; b.classList.remove("on"); b.querySelector("span").textContent = "Play";
+  playing = null;
+}
+
+/* ---------- controls ---------- */
+const tempo = $("tempo"), tv = $("tempoVal");
+tempo.addEventListener("input", ()=>{ tv.textContent = tempo.value; });
+function seg(id, attr, onPick){
+  document.querySelectorAll(`#${id} button`).forEach(b=>{
+    b.addEventListener("click", ()=>{
+      document.querySelectorAll(`#${id} button`).forEach(x=>x.setAttribute("aria-pressed", x===b ? "true":"false"));
+      onPick(b.dataset[attr]); stop(); renderAll();
+    });
+  });
+}
+function setSeg(id, attr, val){
+  document.querySelectorAll(`#${id} button`).forEach(x=>x.setAttribute("aria-pressed", x.dataset[attr]===String(val) ? "true":"false"));
+}
+seg("transpose","t", v=>{ transpose = +v; store.set("transpose", v); });
+seg("clef","c", v=>{ clef = v; store.set("clef", v); });
+seg("octave","o", v=>{ octave = v; store.set("octave", v); });
+(function restore(){
+  const t = store.get("transpose"); if(t==="0"||t==="2"||t==="9"){ transpose = +t; setSeg("transpose","t",t); }
+  const c = store.get("clef"); if(c==="treble"||c==="bass"){ clef = c; setSeg("clef","c",c); }
+  const o = store.get("octave"); if(o==="low"||o==="orig"){ octave = o; setSeg("octave","o",o); }
+})();
+
+$("tuneForm").addEventListener("submit", e=>{ e.preventDefault(); seed = 0; generate(true); });
+$("vary").addEventListener("click", ()=>{ seed++; generate(false); });
+$("tune").addEventListener("change", ()=>{
+  /* picking a different library tune resets the key to that tune's key */
+  if(findTune($("tune").value)) $("key").value = "";
+});
+
+/* initial state: URL, then last session, then East of the Sun */
+function loadParams(qs){
+  const p = new URLSearchParams(qs);
+  $("tune").value = p.get("tune") || "East of the Sun (and West of the Moon)";
+  const k = p.get("key"); $("key").value = (k && [...MAJ_KEYS, ...MIN_KEYS].includes(k)) ? k : "";
+  const ch = p.get("changes") || ""; $("changes").value = ch; if(ch) $("chgBox").open = true;
+  const v = parseInt(p.get("v")||"1",10); seed = isFinite(v) && v>1 ? v-1 : 0;
+}
+loadParams(location.search.length>1 ? location.search : (store.get("last") || ""));
+window.addEventListener("popstate", ()=>{ loadParams(location.search); generate(false); });
+
+generate(false);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(renderAll);
+let rt;
+window.addEventListener("resize", ()=>{ clearTimeout(rt); rt = setTimeout(()=>{ if((window.innerWidth<560)!==narrow){ stop(); renderAll(); } }, 150); });
+})();
+</script>
+</body>
+</html>
