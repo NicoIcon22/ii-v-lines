@@ -9,11 +9,11 @@ It grew out of the *East of the Sun ii–V Lines* page and keeps the same layout
 ## Using it
 
 1. **Tune.** Start typing and pick from the suggestions. Tunes in the library (see `docs/TUNE_LIBRARY.md`) come with their key and their ii–Vs.
-2. **Key.** Leave it on *Tune's key*, or pick another key to transpose everything. For a tune that isn't in the library, the key decides the ii–Vs: home, into ii, to IV and into vi for a major key; home, the relative major and the iv for a minor key.
+2. **Key.** Leave it on *Tune's key*, or pick another key to transpose everything. For a tune that isn't in the library and has no changes yet, only its home ii–V in that key is written; paste or upload its changes to get the rest.
 3. **Paste the chord changes (optional).** Any ii–V in the text (a m7 or m7♭5 followed by a dominant 7th a fourth up) gets its own lines. This overrides the library list. With pasted changes, the Key menu sets the home key and doesn't transpose them.
-4. **Upload chart PDF (optional).** Click *Upload chart PDF* or drop a PDF on the tune box. The lines always come from the chart's own chord changes, never the library's list, even when the title matches a library tune. The app reads the chord symbols from the PDF's text, or, for a scanned chart with no text, with OCR ([Tesseract.js](https://tesseract.projectnaptha.com/) 5.1.1, downloaded the first time, about 10 MB). The chords go into the changes box: check them there against the chart (OCR in particular can misread a symbol), fix anything and press Generate lines. It also takes the title from the chart and shows the chart's pages above the lines. If no chord symbols can be read at all, the status line says so and the changes box opens for you to type them. Remove the PDF with the × on its name.
+4. **Upload chart PDF (optional).** Click *Upload chart PDF* or drop a PDF on the tune box. The lines always come from the chart's own chord changes, never the library's list, even when the title matches a library tune. The app reads the chord symbols from the PDF's text, or, for a scanned chart with no text, with OCR ([Tesseract.js](https://tesseract.projectnaptha.com/) 5.1.1, downloaded the first time, about 10 MB). The chords go into the changes box: check them there against the chart (OCR in particular can misread a symbol), fix anything and press Generate lines. It also takes the title from the chart and shows the chart's pages above the lines. If no chord symbols can be read at all, the status line says so and the changes box opens for you to type them. To use a different chart, click *Replace chart PDF* (or drop another PDF): the new chart's changes replace the old ones. Remove the PDF with the × on its name. A chart belongs to its tune: switching to another tune clears the PDF and the changes read from it (a tune saved in My tunes brings back its own PDF).
 
-   From a chart or pasted changes, every ii–V (m7 or m7♭5 → dominant a fourth up) gets lines, and so does every V7 → I with no ii in front: it's practised as a full ii–V, with the ii added and a note saying so.
+   Only the tune's own ii–Vs and ii–V–Is get lines: a m7 or m7♭5 followed by a dominant 7th a fourth up. When the next chord is the I, its quality comes from the tune, so a ii–V can resolve to a major, a minor or a dominant chord, and the line's last bar is written for that chord (for example the ♭7 instead of the major 7th going into a dominant). A ii–V that doesn't resolve still gets lines, with a note saying so. A V7 → I with no ii, or chords moving any other way, gets nothing.
 5. **Lines per ii–V.** Pick how many essential and how many bebop lines each ii–V gets (0–3 each; default 1 + 1). Lines in a section are always different from each other.
 6. **Length.** *Long* writes one bar per chord (ii | V | I), as before, plus a one-bar ii–V section in the home key. *Short* writes every ii–V with two beats per chord (ii V | I). *Both* gives each ii–V its long and its short lines, tagged Long and Short.
 7. **Generate lines**, then **New variations** to get different lines for the same ii–Vs. The button flashes, shows the variation number, and the lines that changed light up briefly.
@@ -38,7 +38,7 @@ Every tune you generate is saved in **My tunes** (under the tune box): title, ke
 
 The list is stored in your browser (IndexedDB), so it's per device and per browser. **Export list** downloads everything, PDFs included, as one `.json` file; **Import** merges such a file into the list on another device (newer entries win). In a private window the list only lasts until the page is closed.
 
-Typing a different title: a tune from My tunes brings back its saved setup, a library tune starts clean, and any other title is treated as renaming the tune on the page (its changes and PDF stay).
+Typing a different title: a tune from My tunes brings back its saved setup, a library tune starts clean, and any other title clears the chart PDF and the changes read from it. With no PDF on the page, another title is treated as renaming the tune (pasted changes stay).
 
 The transport bar works as before: Read for Concert / B♭ / E♭, Treble or Bass clef, Octave lower (default) or Original, Tempo, Swing, Piano & bass, Loop. Playing a line highlights each note as it sounds.
 
@@ -49,7 +49,7 @@ Every setting is in the URL, so a link opens the same page, for example
 
 ## What's on the page
 
-For each ii–V target, the essential and bebop lines you asked for, long (one bar per chord), short (two beats per chord) or both. With long lines only, the home key also gets a one-bar ii–V section. With long lines, major tunes end with the full chain: the minor ii–V into ii followed by the home ii–V, one bar per chord.
+For each ii–V in the tune, the essential and bebop lines you asked for, long (one bar per chord), short (two beats per chord) or both. With long lines only, the home ii–V also gets a one-bar section. When the tune has the minor ii–V into ii right before the home ii–V (iii VI ii V I), long lines end with the full chain, the two as one line.
 
 The template pools hold 4 essential and 4 bebop long lines per ii–V type (major and minor), and 3 + 3 short ones, so even at 3 lines each, New variations brings in something new.
 
@@ -71,7 +71,7 @@ Add an entry to `tunes.js`:
 {t:"Tune title", c:"Composer", y:1950, k:"F", s:"Swing", ii:["F","Gm","Bb"]}
 ```
 
-`k` is the key (`"Gm"` for minor). In `ii`, `"Bb"` is a ii–V into B♭ major and `"Gm"` a minor ii–V into G minor, home key first. Optional: `aka` (other names that match), `n` (one description per target), `sig` (print a different key signature, e.g. `"C"` for none).
+`k` is the key (`"Gm"` for minor). In `ii`, `"Bb"` is a ii–V into B♭ major, `"Gm"` a minor ii–V into G minor, `"Cm7"` a ii–V with a m7 ii into Cm7 (Dm7 → G7 → Cm7) and `"G7"` a ii–V into the dominant G7, home key first. List only ii–Vs that are in the tune. Optional: `aka` (other names that match), `n` (one description per target), `sig` (print a different key signature, e.g. `"C"` for none).
 
 ## Notes
 

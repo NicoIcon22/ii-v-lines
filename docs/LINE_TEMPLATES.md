@@ -2,6 +2,8 @@
 
 Every line on the page comes from one of these templates. Each is written in ABC notation (eighth-note unit) for one specific ii–V, then moved diatonically to the ii–V being practised, so the shapes stay the same and the spelling follows the new key. The engine picks up or down for each transposition so the line stays between G3 and A5 in the original octave (an octave lower by default on the page).
 
+The tune decides the I chord. A ii–V with a m7 ii uses the major templates and one with a m7♭5 ii the minor ones; when the tune resolves to a different kind of I chord than the template's, the notes in the I bar move by a half step to fit it: into a dominant 7th the major 7th becomes ♭7 (major templates) or the minor 3rd becomes major (minor templates), into a minor chord the major 3rd and 7th of a major template drop to ♭3 and ♭7, and into a major chord the ♭3 and ♭7 of a minor template rise. The I chord symbol and the note under the line follow (in a template's note, `[[X|I]]` marks a note name that belongs to the I chord, so it moves with it).
+
 New variations rotates through the pool for each kind of ii–V. When a section asks for several lines of one kind, it takes consecutive templates from the pool, so they are all different. Short templates are used for the Short length and for the one-bar ii–V section.
 
 ## Major ii–V (one bar per chord: ii | V | I)
@@ -245,4 +247,3 @@ Dm7♭5 from the and of 1, then B–A♭–G–F down G7♭9 (3rd, ♭9, root, 7
 ```
 
 Each bar ends a half or whole step from a chord tone of the next: F → E♮, D♭ → C, E♭ → D, A♭ → G.
-

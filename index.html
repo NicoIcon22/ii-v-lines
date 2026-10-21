@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css?v=20261021b">
+<link rel="stylesheet" href="style.css?v=20261021c">
 </head>
 <body>
 
@@ -31,10 +31,10 @@
       <p class="hint">Any ii–V in what you paste gets its own lines: a m7 or m7♭5 followed by a dominant 7th a fourth higher. Bar lines and spacing don't matter. The Key menu then sets the home key; it doesn't transpose what you pasted.</p>
     </details>
     <div class="filerow">
-      <button class="btn ghost sm" type="button" id="pdfBtn">Upload chart PDF</button>
+      <button class="btn ghost sm" type="button" id="pdfBtn" title="Read the chord changes from a chart PDF">Upload chart PDF</button>
       <input id="pdf" type="file" accept="application/pdf,.pdf" hidden>
       <span class="chip" id="pdfChip" hidden><span id="pdfName"></span><button type="button" id="pdfRemove" aria-label="Remove the PDF from this tune" title="Remove the PDF">×</button></span>
-      <p class="hint" id="pdfHint">Or drop a PDF here. Its chord changes are used for the lines (scanned charts are read with OCR), and its pages are shown with them.</p>
+      <p class="hint" id="pdfHint">Or drop a PDF here (a new one replaces the current chart). Its chord changes are used for the lines (scanned charts are read with OCR), and its pages are shown with them. Switching to another tune clears it.</p>
     </div>
     <div class="optrow" role="group" aria-label="What to generate">
       <span class="ogroup"><span class="olabel">Lines per ii–V</span>
@@ -133,10 +133,10 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.4.4/abcjs-basic-min.js"></script>
-<script src="tunes.js?v=20261021b"></script>
-<script src="lines.js?v=20261021b"></script>
-<script src="pdfchart.js?v=20261021b"></script>
-<script src="mytunes.js?v=20261021b"></script>
-<script src="app.js?v=20261021b"></script>
+<script src="tunes.js?v=20261021c"></script>
+<script src="lines.js?v=20261021c"></script>
+<script src="pdfchart.js?v=20261021c"></script>
+<script src="mytunes.js?v=20261021c"></script>
+<script src="app.js?v=20261021c"></script>
 </body>
 </html>
