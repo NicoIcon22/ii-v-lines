@@ -1,6 +1,6 @@
 # Deployment
 
-The app is a static site (`index.html`, `lines.js`, `tunes.js`) hosted on GitHub Pages.
+The app is a static site (`index.html`, `lines.js`, `tunes.js`, `pdfchart.js`, `mytunes.js`) hosted on GitHub Pages. Saved tunes live in each visitor's browser, so there is no server or database to run.
 
 - **Repository:** https://github.com/NicoIcon22/ii-v-lines (public)
 - **Live URL:** https://nicoicon22.github.io/ii-v-lines/
@@ -20,4 +20,5 @@ Open `index.html` through any local web server, e.g. `python3 -m http.server` in
 ## External resources
 
 - abcjs 6.4.4 from cdnjs (notation and timing)
+- pdf.js 3.11.174 from cdnjs (chart PDFs; loaded only when a PDF is used)
 - Google Fonts: Big Shoulders Display, Work Sans, IBM Plex Mono
