@@ -125,7 +125,10 @@ const T = {
        note:"[[Bbm7]] arpeggio with the 11th, then [[Eb7]] with its 9th ([[F]]). <b>[[Db]] → [[C]]</b> is the guide tone from the 7th of [[Eb7]] to the 3rd of [[Abmaj7]]."},
       {key:"C", root:"C", chords:MAJ,
        abc:'"ii"dcAF EFAc|"V"Bdfe dBGF|"I"E4 z4|]',
-       note:"[[Dm9]] down from the root and back up from the 9th. [[C]] → [[B]] links the 7th of [[Dm7]] to the 3rd of [[G7]], and <b>[[F]] → [[E]]</b> does the same into [[Cmaj7]]."}
+       note:"[[Dm9]] down from the root and back up from the 9th. [[C]] → [[B]] links the 7th of [[Dm7]] to the 3rd of [[G7]], and <b>[[F]] → [[E]]</b> does the same into [[Cmaj7]]."},
+      {key:"C", root:"C", chords:MAJ,
+       abc:'"ii"c3A F2E2|"V"B3d f2d2|"I"e4 z4|]',
+       note:"Dotted-quarter rhythm on the chord tones: [[C]]–[[A]]–[[F]]–[[E]] over [[Dm7]], then [[B]]–[[D]]–[[F]] over [[G7]], and [[D]] steps up to <b>[[E]], the 3rd of [[Cmaj7]]</b>."}
     ],
     bebop:[
       {key:"Eb", root:"Eb", chords:MAJ_B9,
@@ -136,7 +139,10 @@ const T = {
        note:"[[Bb]] dorian down from [[F]], an <b>[[E°7]]</b> arpeggio for [[Eb7b9]], then [[Bb]]–[[B]] chromatically into [[C]]."},
       {key:"C", root:"C", chords:MAJ_B9,
        abc:'"ii"zAce gfed|"V"c=Bdf _agfd|"I"e2c2 G4|]',
-       note:"Up the top of [[Dm9]] and down the scale, then a [[C]] → [[B]] approach into a <b>[[B°7]]</b> arpeggio (the ♭9 sound), and [[D]] steps up to <b>[[E]], the 3rd of [[Cmaj7]]</b>."}
+       note:"Up the top of [[Dm9]] and down the scale, then a [[C]] → [[B]] approach into a <b>[[B°7]]</b> arpeggio (the ♭9 sound), and [[D]] steps up to <b>[[E]], the 3rd of [[Cmaj7]]</b>."},
+      {key:"C", root:"C", chords:MAJ_B9,
+       abc:'"ii"AGFE ^DEFA|"V"_AGF_E D_DC=B|"I"c2G2 E4|]',
+       note:"Down [[Dm7]] from the 5th with a chromatic lower neighbor ([[D#]]) and back up to [[A]], which slides a half step to <b>[[Ab]]</b>, the ♭9. A chromatic descent through the altered tones lands on [[B]] → <b>[[C]]</b>."}
     ]
   },
   minor:{
@@ -149,7 +155,10 @@ const T = {
        note:"[[Dm7b5]] arpeggio, then a [[B°7]] arpeggio over [[G7b9]]. The <b>leading tone [[B]]</b> resolves to [[C]]."},
       {key:"C", root:"C", chords:MIN,
        abc:'"ii"dc_AF DF_Ac|"V"=BG_AB df_ed|"I"c4 z4|]',
-       note:"[[Dm7b5]] down and back up. Over [[G7b9]] the line circles the 3rd ([[B]]–[[G]]–[[Ab]]–[[B]]), climbs to the 7th and lands on <b>[[C]]</b> through the ♭13 ([[Eb]]) and the 5th ([[D]])."}
+       note:"[[Dm7b5]] down and back up. Over [[G7b9]] the line circles the 3rd ([[B]]–[[G]]–[[Ab]]–[[B]]), climbs to the 7th and lands on <b>[[C]]</b> through the ♭13 ([[Eb]]) and the 5th ([[D]])."},
+      {key:"C", root:"C", chords:MIN,
+       abc:'"ii"c3_A F2D2|"V"=B,3D F2_A2|"I"G4 z4|]',
+       note:"Dotted-quarter arpeggios: [[Dm7b5]] down from the 7th, [[G7b9]] up from the 3rd to the ♭9 ([[Ab]]), and [[Ab]] falls to <b>[[G]]</b>, the 5th of [[Cm]]."}
     ],
     bebop:[
       {key:"Eb", root:"F", chords:MIN,
@@ -160,7 +169,10 @@ const T = {
        note:"Locrian run from [[D]] back down to [[D]], a [[C]]–[[B]] approach into the ♭9 arpeggio, and [[D]] steps up to <b>[[Eb]], the 3rd of [[Cm]]</b>."},
       {key:"C", root:"C", chords:MIN,
        abc:'"ii"zF_Ac _edc_A|"V"G=Bdf _agfd|"I"_e2c2 G4|]',
-       note:"Starts on the and of 1 with [[Dm7b5]] and its ♭9 ([[Eb]]), runs up [[G7b9]] to the ♭9 ([[Ab]]) and back down, and [[D]] rises to <b>[[Eb]], the 3rd of [[Cm]]</b>."}
+       note:"Starts on the and of 1 with [[Dm7b5]] and its ♭9 ([[Eb]]), runs up [[G7b9]] to the ♭9 ([[Ab]]) and back down, and [[D]] rises to <b>[[Eb]], the 3rd of [[Cm]]</b>."},
+      {key:"C", root:"C", chords:MIN,
+       abc:'"ii"_ecdf _agfd|"V"_dc=Bd f_agf|"I"_e2G2 c4|]',
+       note:"An [[Eb]]–[[C]] enclosure of [[D]] opens the [[Dm7b5]] arpeggio. Over [[G7b9]], [[Db]]–[[C]] lead chromatically into [[B]], the line climbs to the ♭9 ([[Ab]]), and [[F]] resolves to <b>[[Eb]], the 3rd of [[Cm]]</b>."}
     ]
   },
   fastMajor:{
@@ -170,7 +182,10 @@ const T = {
        note:"Guide tones only: <b>[[Ab]] and [[Eb]]</b> (3rd and 7th of [[Fm7]]), <b>[[D]] and [[Ab]]</b> (3rd and 7th of [[Bb7]]), resolving to [[G]]."},
       {key:"C", root:"C", chords:FAST_MAJ,
        abc:'"ii"FAce "V"dBGF|"I"E4 z4|]',
-       note:"[[Dm9]] up from the 3rd, [[G7]] down from the 5th, and the 7th ([[F]]) falls to <b>[[E]]</b>."}
+       note:"[[Dm9]] up from the 3rd, [[G7]] down from the 5th, and the 7th ([[F]]) falls to <b>[[E]]</b>."},
+      {key:"C", root:"C", chords:FAST_MAJ,
+       abc:'"ii"cAFD "V"=B,DFA|"I"G4 z4|]',
+       note:"[[Dm7]] down from the 7th, [[G9]] up from the 3rd, and [[A]] falls to <b>[[G]]</b>, the 5th of [[Cmaj7]]."}
     ],
     bebop:[
       {key:"Eb", root:"Eb", chords:FAST_MAJ_B9,
@@ -178,19 +193,34 @@ const T = {
        note:"The classic shape: [[F]]–[[Eb]]–[[D]]–[[C]] down, <b>[[B°7]]</b> up, and [[Ab]] falls to [[G]] on the downbeat."},
       {key:"C", root:"C", chords:FAST_MAJ_B9,
        abc:'"ii"fedc "V"=B_AGF|"I"E4 z4|]',
-       note:"A straight run down: [[Dm7]] from [[F]], then [[B]]–[[Ab]]–[[G]]–[[F]] over [[G7b9]] (3rd, ♭9, root, 7th), and [[F]] resolves to <b>[[E]]</b>."}
+       note:"A straight run down: [[Dm7]] from [[F]], then [[B]]–[[Ab]]–[[G]]–[[F]] over [[G7b9]] (3rd, ♭9, root, 7th), and [[F]] resolves to <b>[[E]]</b>."},
+      {key:"C", root:"C", chords:FAST_MAJ_B9,
+       abc:'"ii"zDFA "V"_A^FG=B|"I"c4 z4|]',
+       note:"Up [[Dm7]] from the and of 1, then an [[Ab]]–[[F#]] enclosure of [[G]], and the 3rd ([[B]]) leads into <b>[[C]]</b>."}
     ]
   },
   fastMinor:{
     essential:[
       {key:"C", root:"C", chords:FAST_MIN,
        abc:'"ii"F2c2 "V"=B2F2|"I"_E4 z4|]',
-       note:"Guide tones only: <b>[[F]] and [[C]]</b> (3rd and 7th of [[Dm7b5]]), <b>[[B]] and [[F]]</b> (3rd and 7th of [[G7b9]]), resolving to [[Eb]]."}
+       note:"Guide tones only: <b>[[F]] and [[C]]</b> (3rd and 7th of [[Dm7b5]]), <b>[[B]] and [[F]]</b> (3rd and 7th of [[G7b9]]), resolving to [[Eb]]."},
+      {key:"C", root:"C", chords:FAST_MIN,
+       abc:'"ii"DF_Ac "V"=Bd_af|"I"_e4 z4|]',
+       note:"[[Dm7b5]] up from the root, then [[G7b9]] from the 3rd with a leap to the ♭9 ([[Ab]]), and [[F]] resolves to <b>[[Eb]]</b>, the 3rd of [[Cm]]."},
+      {key:"C", root:"C", chords:FAST_MIN,
+       abc:'"ii"c2_A2 "V"G2=B2|"I"c4 z4|]',
+       note:"Quarter notes: [[C]] and [[Ab]] (7th and ♭5 of [[Dm7b5]]), [[G]] and [[B]] (root and 3rd of [[G7b9]]), and the leading tone resolves to <b>[[C]]</b>."}
     ],
     bebop:[
       {key:"C", root:"C", chords:FAST_MIN,
        abc:'"ii"dc_AF "V"=Bdf_a|"I"g4 z4|]',
-       note:"Down [[Dm7b5]] from the root, up a <b>[[B°7]]</b> arpeggio for the ♭9 sound, and [[Ab]] falls to [[G]], the 5th of [[Cm]]."}
+       note:"Down [[Dm7b5]] from the root, up a <b>[[B°7]]</b> arpeggio for the ♭9 sound, and [[Ab]] falls to [[G]], the 5th of [[Cm]]."},
+      {key:"C", root:"C", chords:FAST_MIN,
+       abc:'"ii"_edc_A "V"G_A=Bd|"I"c4 z4|]',
+       note:"Locrian run down from the ♭9 ([[Eb]]) of [[Dm7b5]], then [[G]]–[[Ab]]–[[B]]–[[D]] up the [[G7b9]], and [[D]] falls to <b>[[C]]</b>."},
+      {key:"C", root:"C", chords:FAST_MIN,
+       abc:'"ii"zF_Ac "V"=B_AGF|"I"_E4 z4|]',
+       note:"[[Dm7b5]] from the and of 1, then [[B]]–[[Ab]]–[[G]]–[[F]] down [[G7b9]] (3rd, ♭9, root, 7th), and [[F]] resolves to <b>[[Eb]]</b>, the 3rd of [[Cm]]."}
     ]
   },
   chain:{
