@@ -9,7 +9,8 @@
  * listed in the template's `chords` (role, quality, beats), spelled from the target root.
  *
  * In a note, [[X]] is a note or chord name written relative to the template's target root;
- * it is transposed along with the line.
+ * it is transposed along with the line. [[X|I]] marks a note of the I chord: when the tune's
+ * I chord differs from the template's (see realize), it moves with the I bar.
  */
 (function(){
 const LET = "CDEFGAB", NAT = [0,2,4,5,7,9,11];
@@ -119,16 +120,16 @@ const T = {
     essential:[
       {key:"Eb", root:"Eb", chords:MAJ,
        abc:'"ii"FAce gfec|"V"=BAFD _B,DFA|"I"G4 z4|]',
-       note:"<b>[[Fm9]] arpeggio</b> up and back down. [[B]] (the ♭9) slides into a [[Bb7]] arpeggio, and <b>[[Ab]] → [[G]]</b> is the guide-tone resolution into [[Eb]]."},
+       note:"<b>[[Fm9]] arpeggio</b> up and back down. [[B]] (the ♭9) slides into a [[Bb7]] arpeggio, and <b>[[Ab]] → [[G|I]]</b> is the guide-tone resolution into [[Eb]]."},
       {key:"Eb", root:"Ab", chords:MAJ,
        abc:'"ii"FAB_d fe_dB|"V"GEGB _dfe_d|"I"c4 z4|]',
-       note:"[[Bbm7]] arpeggio with the 11th, then [[Eb7]] with its 9th ([[F]]). <b>[[Db]] → [[C]]</b> is the guide tone from the 7th of [[Eb7]] to the 3rd of [[Abmaj7]]."},
+       note:"[[Bbm7]] arpeggio with the 11th, then [[Eb7]] with its 9th ([[F]]). <b>[[Db]] → [[C|I]]</b> is the guide tone from the 7th of [[Eb7]] to the 3rd of [[Abmaj7]]."},
       {key:"C", root:"C", chords:MAJ,
        abc:'"ii"dcAF EFAc|"V"Bdfe dBGF|"I"E4 z4|]',
-       note:"[[Dm9]] down from the root and back up from the 9th. [[C]] → [[B]] links the 7th of [[Dm7]] to the 3rd of [[G7]], and <b>[[F]] → [[E]]</b> does the same into [[Cmaj7]]."},
+       note:"[[Dm9]] down from the root and back up from the 9th. [[C]] → [[B]] links the 7th of [[Dm7]] to the 3rd of [[G7]], and <b>[[F]] → [[E|I]]</b> does the same into [[Cmaj7]]."},
       {key:"C", root:"C", chords:MAJ,
        abc:'"ii"c3A F2E2|"V"B3d f2d2|"I"e4 z4|]',
-       note:"Dotted-quarter rhythm on the chord tones: [[C]]–[[A]]–[[F]]–[[E]] over [[Dm7]], then [[B]]–[[D]]–[[F]] over [[G7]], and [[D]] steps up to <b>[[E]], the 3rd of [[Cmaj7]]</b>."}
+       note:"Dotted-quarter rhythm on the chord tones: [[C]]–[[A]]–[[F]]–[[E]] over [[Dm7]], then [[B]]–[[D]]–[[F]] over [[G7]], and [[D]] steps up to <b>[[E|I]], the 3rd of [[Cmaj7]]</b>."}
     ],
     bebop:[
       {key:"Eb", root:"Eb", chords:MAJ_B9,
@@ -136,10 +137,10 @@ const T = {
        note:"Starts on the and of 1. Over [[Bb7b9]] it outlines a <b>[[B°7]]</b> arpeggio (the ♭9 sound), then runs [[G]]–[[Gb]]–[[F]]–[[D]] chromatically and steps up to [[Eb]]."},
       {key:"Eb", root:"Ab", chords:MAJ_B9,
        abc:'"ii"fe_dc BAGF|"V"=EGB_d =e_dB=B|"I"c2e2 g4|]',
-       note:"[[Bb]] dorian down from [[F]], an <b>[[E°7]]</b> arpeggio for [[Eb7b9]], then [[Bb]]–[[B]] chromatically into [[C]]."},
+       note:"[[Bb]] dorian down from [[F]], an <b>[[E°7]]</b> arpeggio for [[Eb7b9]], then [[Bb]]–[[B]] chromatically into [[C|I]]."},
       {key:"C", root:"C", chords:MAJ_B9,
        abc:'"ii"zAce gfed|"V"c=Bdf _agfd|"I"e2c2 G4|]',
-       note:"Up the top of [[Dm9]] and down the scale, then a [[C]] → [[B]] approach into a <b>[[B°7]]</b> arpeggio (the ♭9 sound), and [[D]] steps up to <b>[[E]], the 3rd of [[Cmaj7]]</b>."},
+       note:"Up the top of [[Dm9]] and down the scale, then a [[C]] → [[B]] approach into a <b>[[B°7]]</b> arpeggio (the ♭9 sound), and [[D]] steps up to <b>[[E|I]], the 3rd of [[Cmaj7]]</b>."},
       {key:"C", root:"C", chords:MAJ_B9,
        abc:'"ii"AGFE ^DEFA|"V"_AGF_E D_DC=B|"I"c2G2 E4|]',
        note:"Down [[Dm7]] from the 5th with a chromatic lower neighbor ([[D#]]) and back up to [[A]], which slides a half step to <b>[[Ab]]</b>, the ♭9. A chromatic descent through the altered tones lands on [[B]] → <b>[[C]]</b>."}
@@ -149,7 +150,7 @@ const T = {
     essential:[
       {key:"Eb", root:"F", chords:MIN,
        abc:'"ii"GB_df e_dBG|"V"=EGB_d cBAG|"I"A4 z4|]',
-       note:"[[Gm7b5]] arpeggio, then <b>[[E]]</b>, the 3rd of [[C7]]. [[C]]–[[Bb]]–[[Ab]]–[[G]] is the phrygian-dominant sound, and [[G]] rises to [[Ab]], the 3rd of [[Fm]]."},
+       note:"[[Gm7b5]] arpeggio, then <b>[[E]]</b>, the 3rd of [[C7]]. [[C]]–[[Bb]]–[[Ab]]–[[G]] is the phrygian-dominant sound, and [[G]] rises to [[Ab|I]], the 3rd of [[Fm]]."},
       {key:"Eb", root:"C", chords:MIN,
        abc:'"ii"FAcf edcA|"V"=Bdfa gfd=B|"I"c4 z4|]',
        note:"[[Dm7b5]] arpeggio, then a [[B°7]] arpeggio over [[G7b9]]. The <b>leading tone [[B]]</b> resolves to [[C]]."},
@@ -163,26 +164,26 @@ const T = {
     bebop:[
       {key:"Eb", root:"F", chords:MIN,
        abc:'"ii"z_dfa gf_dB|"V"AG=EG B_dcB|"I"A2c2 F4|]',
-       note:"A [[Bbm7]] shape over [[Gm7b5]] gives the half-diminished color. The [[Ab]] on beat 1 of [[C7b9]] is the <b>♭13</b>, and the line lands on [[Ab]] again in [[Fm]]."},
+       note:"A [[Bbm7]] shape over [[Gm7b5]] gives the half-diminished color. The [[Ab]] on beat 1 of [[C7b9]] is the <b>♭13</b>, and the line lands on [[Ab|I]] again in [[Fm]]."},
       {key:"Eb", root:"C", chords:MIN,
        abc:'"ii"zdfa gfed|"V"c=Bdf agfd|"I"e4 z4|]',
-       note:"Locrian run from [[D]] back down to [[D]], a [[C]]–[[B]] approach into the ♭9 arpeggio, and [[D]] steps up to <b>[[Eb]], the 3rd of [[Cm]]</b>."},
+       note:"Locrian run from [[D]] back down to [[D]], a [[C]]–[[B]] approach into the ♭9 arpeggio, and [[D]] steps up to <b>[[Eb|I]], the 3rd of [[Cm]]</b>."},
       {key:"C", root:"C", chords:MIN,
        abc:'"ii"zF_Ac _edc_A|"V"G=Bdf _agfd|"I"_e2c2 G4|]',
-       note:"Starts on the and of 1 with [[Dm7b5]] and its ♭9 ([[Eb]]), runs up [[G7b9]] to the ♭9 ([[Ab]]) and back down, and [[D]] rises to <b>[[Eb]], the 3rd of [[Cm]]</b>."},
+       note:"Starts on the and of 1 with [[Dm7b5]] and its ♭9 ([[Eb]]), runs up [[G7b9]] to the ♭9 ([[Ab]]) and back down, and [[D]] rises to <b>[[Eb|I]], the 3rd of [[Cm]]</b>."},
       {key:"C", root:"C", chords:MIN,
        abc:'"ii"_ecdf _agfd|"V"_dc=Bd f_agf|"I"_e2G2 c4|]',
-       note:"An [[Eb]]–[[C]] enclosure of [[D]] opens the [[Dm7b5]] arpeggio. Over [[G7b9]], [[Db]]–[[C]] lead chromatically into [[B]], the line climbs to the ♭9 ([[Ab]]), and [[F]] resolves to <b>[[Eb]], the 3rd of [[Cm]]</b>."}
+       note:"An [[Eb]]–[[C]] enclosure of [[D]] opens the [[Dm7b5]] arpeggio. Over [[G7b9]], [[Db]]–[[C]] lead chromatically into [[B]], the line climbs to the ♭9 ([[Ab]]), and [[F]] resolves to <b>[[Eb|I]], the 3rd of [[Cm]]</b>."}
     ]
   },
   fastMajor:{
     essential:[
       {key:"Eb", root:"Eb", chords:FAST_MAJ,
        abc:'"ii"A2e2 "V"d2A2|"I"G4 z4|]',
-       note:"Guide tones only: <b>[[Ab]] and [[Eb]]</b> (3rd and 7th of [[Fm7]]), <b>[[D]] and [[Ab]]</b> (3rd and 7th of [[Bb7]]), resolving to [[G]]."},
+       note:"Guide tones only: <b>[[Ab]] and [[Eb]]</b> (3rd and 7th of [[Fm7]]), <b>[[D]] and [[Ab]]</b> (3rd and 7th of [[Bb7]]), resolving to [[G|I]]."},
       {key:"C", root:"C", chords:FAST_MAJ,
        abc:'"ii"FAce "V"dBGF|"I"E4 z4|]',
-       note:"[[Dm9]] up from the 3rd, [[G7]] down from the 5th, and the 7th ([[F]]) falls to <b>[[E]]</b>."},
+       note:"[[Dm9]] up from the 3rd, [[G7]] down from the 5th, and the 7th ([[F]]) falls to <b>[[E|I]]</b>."},
       {key:"C", root:"C", chords:FAST_MAJ,
        abc:'"ii"cAFD "V"=B,DFA|"I"G4 z4|]',
        note:"[[Dm7]] down from the 7th, [[G9]] up from the 3rd, and [[A]] falls to <b>[[G]]</b>, the 5th of [[Cmaj7]]."}
@@ -190,10 +191,10 @@ const T = {
     bebop:[
       {key:"Eb", root:"Eb", chords:FAST_MAJ_B9,
        abc:'"ii"fedc "V"=Bdfa|"I"g4 z4|]',
-       note:"The classic shape: [[F]]–[[Eb]]–[[D]]–[[C]] down, <b>[[B°7]]</b> up, and [[Ab]] falls to [[G]] on the downbeat."},
+       note:"The classic shape: [[F]]–[[Eb]]–[[D]]–[[C]] down, <b>[[B°7]]</b> up, and [[Ab]] falls to [[G|I]] on the downbeat."},
       {key:"C", root:"C", chords:FAST_MAJ_B9,
        abc:'"ii"fedc "V"=B_AGF|"I"E4 z4|]',
-       note:"A straight run down: [[Dm7]] from [[F]], then [[B]]–[[Ab]]–[[G]]–[[F]] over [[G7b9]] (3rd, ♭9, root, 7th), and [[F]] resolves to <b>[[E]]</b>."},
+       note:"A straight run down: [[Dm7]] from [[F]], then [[B]]–[[Ab]]–[[G]]–[[F]] over [[G7b9]] (3rd, ♭9, root, 7th), and [[F]] resolves to <b>[[E|I]]</b>."},
       {key:"C", root:"C", chords:FAST_MAJ_B9,
        abc:'"ii"zDFA "V"_A^FG=B|"I"c4 z4|]',
        note:"Up [[Dm7]] from the and of 1, then an [[Ab]]–[[F#]] enclosure of [[G]], and the 3rd ([[B]]) leads into <b>[[C]]</b>."}
@@ -203,10 +204,10 @@ const T = {
     essential:[
       {key:"C", root:"C", chords:FAST_MIN,
        abc:'"ii"F2c2 "V"=B2F2|"I"_E4 z4|]',
-       note:"Guide tones only: <b>[[F]] and [[C]]</b> (3rd and 7th of [[Dm7b5]]), <b>[[B]] and [[F]]</b> (3rd and 7th of [[G7b9]]), resolving to [[Eb]]."},
+       note:"Guide tones only: <b>[[F]] and [[C]]</b> (3rd and 7th of [[Dm7b5]]), <b>[[B]] and [[F]]</b> (3rd and 7th of [[G7b9]]), resolving to [[Eb|I]]."},
       {key:"C", root:"C", chords:FAST_MIN,
        abc:'"ii"DF_Ac "V"=Bd_af|"I"_e4 z4|]',
-       note:"[[Dm7b5]] up from the root, then [[G7b9]] from the 3rd with a leap to the ♭9 ([[Ab]]), and [[F]] resolves to <b>[[Eb]]</b>, the 3rd of [[Cm]]."},
+       note:"[[Dm7b5]] up from the root, then [[G7b9]] from the 3rd with a leap to the ♭9 ([[Ab]]), and [[F]] resolves to <b>[[Eb|I]]</b>, the 3rd of [[Cm]]."},
       {key:"C", root:"C", chords:FAST_MIN,
        abc:'"ii"c2_A2 "V"G2=B2|"I"c4 z4|]',
        note:"Quarter notes: [[C]] and [[Ab]] (7th and ♭5 of [[Dm7b5]]), [[G]] and [[B]] (root and 3rd of [[G7b9]]), and the leading tone resolves to <b>[[C]]</b>."}
@@ -220,7 +221,7 @@ const T = {
        note:"Locrian run down from the ♭9 ([[Eb]]) of [[Dm7b5]], then [[G]]–[[Ab]]–[[B]]–[[D]] up the [[G7b9]], and [[D]] falls to <b>[[C]]</b>."},
       {key:"C", root:"C", chords:FAST_MIN,
        abc:'"ii"zF_Ac "V"=B_AGF|"I"_E4 z4|]',
-       note:"[[Dm7b5]] from the and of 1, then [[B]]–[[Ab]]–[[G]]–[[F]] down [[G7b9]] (3rd, ♭9, root, 7th), and [[F]] resolves to <b>[[Eb]]</b>, the 3rd of [[Cm]]."}
+       note:"[[Dm7b5]] from the and of 1, then [[B]]–[[Ab]]–[[G]]–[[F]] down [[G7b9]] (3rd, ♭9, root, 7th), and [[F]] resolves to <b>[[Eb|I]]</b>, the 3rd of [[Cm]]."}
     ]
   },
   chain:{
@@ -246,8 +247,24 @@ function parsedTemplate(tp){
   return cache.get(tp);
 }
 
-/* target: {li, alter}; sig: key signature array of the tune; returns a line object */
-function realize(tp, target, sig){
+/* The I chord a template resolves to can be swapped for the tune's own: iq is "maj7", "m7"
+   or "7". Notes in the I bar (and note names marked [[X|I]] in the text) move by a half step
+   where the chord differs: the 3rd (major ↔ minor) and the 7th (major 7th ↔ ♭7). */
+const IQ_CLASS = q => /^m(?!aj)/.test(q) ? "min" : /^(7|9|13)/.test(q) ? "dom" : "maj";
+const I_SHIFT = {
+  "maj>min": {4:-1, 11:-1}, "maj>dom": {11:-1},
+  "min>maj": {3:1, 10:1},   "min>dom": {3:1}
+};
+function iShift(tp, iq){
+  if(!iq) return null;
+  const I = tp.chords.find(c=>c[0]==="I"); if(!I) return null;
+  const from = IQ_CLASS(I[1]), to = IQ_CLASS(iq);
+  return from===to ? null : (I_SHIFT[from+">"+to] || null);
+}
+
+/* target: {li, alter}; sig: key signature array of the tune; iq: the tune's I chord quality
+   (optional; default is the template's own); returns a line object */
+function realize(tp, target, sig, iq){
   const P = parsedTemplate(tp);
   const iv = interval(P.root, target);
   let steps = iv.steps, semis = iv.semis;
@@ -256,20 +273,30 @@ function realize(tp, target, sig){
   const over = d => Math.max(0, LO-(P.lo+d)) + Math.max(0, (P.hi+d)-HI);
   const up = over(semis), down = over(semis-12);
   if(down < up || (down===up && 12-semis < semis)){ steps -= 7; semis -= 12; }
+  const shift = iShift(tp, iq), tpc = pcOf(target);
+  const iAt = tp.chords.findIndex(c=>c[0]==="I");
+  let ci = -1;
   const toks = P.toks.map(t=>{
+    if(t.t==="chord") ci++;
     if(t.t!=="note") return t;
-    const midi = midiOf(t) + semis, step = t.step + steps;
+    let midi = midiOf(t) + semis; const step = t.step + steps;
+    if(shift && ci===iAt) midi += shift[mod(midi - tpc, 12)] || 0;
     const nat = 12*(Math.floor(step/7)+1) + NAT[mod(step,7)];
     return {t:"note", step, alter: midi-nat, dur:t.dur};
   });
   const chords = tp.chords.map(([role,q,beats])=>{
     const r = moveName(target, ROLE[role][0], ROLE[role][1]);
-    return {name: nameStr(r)+q, beats};
+    return {name: nameStr(r) + (role==="I" && iq ? iq : q), beats};
   });
-  const note = tp.note.replace(/\[\[([^\]]+)\]\]/g, (m,x)=>{
+  const note = tp.note.replace(/\[\[([^\]|]+)(\|I)?\]\]/g, (m,x,inI)=>{
     const p = parseName(x); if(!p) return x;
-    const t = moveName(p, iv.steps, iv.semis);
-    if(p.rest) return prettyName(t) + prettySuffix(p.rest);
+    let t = moveName(p, iv.steps, iv.semis);
+    if(p.rest){
+      /* the I chord itself: named as the tune has it */
+      if(shift && pcOf(p)===pcOf(P.root)) return prettyName(t) + prettySuffix(iq);
+      return prettyName(t) + prettySuffix(p.rest);
+    }
+    if(inI && shift){ const d = shift[mod(pcOf(t) - tpc, 12)] || 0; if(d) t = {li:t.li, alter:t.alter + d}; }
     /* single note: show a natural sign when the key signature would otherwise alter it */
     return LET[t.li] + (t.alter===0 && sig[t.li]!==0 ? "♮" : glyph(t.alter));
   }).replace(/\b(a|an|A|An) ((?:<b>)?)([A-G])(?![a-ln-z])/g, (m,art,b,l)=>{
@@ -326,16 +353,35 @@ function parseChanges(text){
     if(last && pcOf(last.root)===pcOf(root) && last.type===c.type) return; /* repeated chord */
     chords.push(c);
   });
-  const targets = [];
+  /* every ii–V in the changes: a m7 or m7♭5 followed by a dominant 7th a fourth up. With the
+     chord after it a fifth below the V it is a ii–V–I, and the I's quality (major, minor or
+     dominant) comes from the tune; otherwise it is a ii–V on its own, and the I it points to
+     is taken from the ii (m7 → major, m7♭5 → minor). Nothing else in the changes gets lines:
+     a V–I with no ii, or chords moving any other way, is left alone. */
+  const IQ = {maj:"maj7", min:"m7", hd:"m7", dom:"7"};
+  const iiVs = [];
   for(let i=0;i<chords.length-1;i++){
     const a = chords[i], b = chords[i+1];
-    if((a.type==="min"||a.type==="hd") && b.type==="dom" && mod(pcOf(b.root)-pcOf(a.root),12)===5){
-      const tgt = moveName(b.root, 3, 5), nx = chords[i+2];
-      const minor = (nx && pcOf(nx.root)===pcOf(tgt)) ? (nx.type==="min"||nx.type==="hd") : a.type==="hd";
-      const key = pcOf(tgt)+(minor?"m":"");
-      if(!targets.some(t=>t.id===key)) targets.push({id:key, root:simplify(tgt), minor});
-    }
+    if(!((a.type==="min"||a.type==="hd") && b.type==="dom" && mod(pcOf(b.root)-pcOf(a.root),12)===5)) continue;
+    const tgt = moveName(b.root, 3, 5), nx = chords[i+2];
+    const resolved = !!(nx && pcOf(nx.root)===pcOf(tgt) && IQ[nx.type]);
+    const iq = resolved ? IQ[nx.type] : (a.type==="hd" ? "m7" : "maj7");
+    const minor = a.type==="hd";
+    iiVs.push({at:i, root:simplify(tgt), minor, iq, resolved,
+      id: pcOf(tgt) + (minor ? "m" : "") + (iq===(minor ? "m7" : "maj7") ? "" : "-" + iq)});
   }
+  const targets = [];
+  iiVs.forEach(t=>{
+    const have = targets.find(x=>x.id===t.id);
+    if(have){ have.resolved = have.resolved || t.resolved; return; }
+    targets.push({id:t.id, root:t.root, minor:t.minor, iq:t.iq, resolved:t.resolved});
+  });
+  /* the chain: a ii–V into a m7 chord that is itself the ii of the next ii–V (iii VI ii V) */
+  const chain = [];
+  iiVs.forEach(t=>{
+    const n = iiVs.find(x=>x.at===t.at+2);
+    if(n && t.minor && !n.minor && n.iq==="maj7" && chords[t.at+2].type==="min") chain.push(pcOf(n.root));
+  });
   /* home key: the last chord if it sounds like a tonic (maj7, 6, m6, m(maj7)...), else the
      first chord if it does, else the ii–V target that comes up most often */
   const tonicLike = c => c.type==="maj" || (c.type==="min" && /^(m|-|mi|min)(6|69|6\/9|\(?maj7\)?|\(?ma7\)?|Δ7?|M7)?$/.test(c.q));
@@ -344,19 +390,11 @@ function parseChanges(text){
   if(last && tonicLike(last)) home = {root:last.root, minor:last.type==="min"};
   else if(first && tonicLike(first)) home = {root:first.root, minor:first.type==="min"};
   else if(targets.length){
-    const n = {}; targets.forEach(t=>n[t.id]=0);
-    for(let i=0;i<chords.length-1;i++){
-      const a = chords[i], b = chords[i+1];
-      if((a.type==="min"||a.type==="hd") && b.type==="dom" && mod(pcOf(b.root)-pcOf(a.root),12)===5){
-        const tg = moveName(b.root,3,5), nx = chords[i+2];
-        const minor = (nx && pcOf(nx.root)===pcOf(tg)) ? (nx.type==="min"||nx.type==="hd") : a.type==="hd";
-        n[pcOf(tg)+(minor?"m":"")]++;
-      }
-    }
+    const n = {}; iiVs.forEach(t=> n[t.id] = (n[t.id]||0) + 1);
     const best = targets.slice().sort((x,y)=> n[y.id]-n[x.id])[0];
-    home = {root:best.root, minor:best.minor};
+    home = {root:best.root, minor:best.iq==="m7"};
   }
-  return {chords, targets, home: home ? {root:simplify(home.root), minor:home.minor} : null};
+  return {chords, targets, chain, home: home ? {root:simplify(home.root), minor:home.minor} : null};
 }
 
 window.IIV = {T, parseName, nameStr, prettyName, prettyChord, pcOf, moveName, interval, simplify,
