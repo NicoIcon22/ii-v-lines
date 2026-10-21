@@ -2,7 +2,7 @@
 
 Every line on the page comes from one of these templates. Each is written in ABC notation (eighth-note unit) for one specific ii–V, then moved diatonically to the ii–V being practised, so the shapes stay the same and the spelling follows the new key. The engine picks up or down for each transposition so the line stays between G3 and A5 in the original octave (an octave lower by default on the page).
 
-New variations rotates through the pool for each kind of ii–V.
+New variations rotates through the pool for each kind of ii–V. When a section asks for several lines of one kind, it takes consecutive templates from the pool, so they are all different. Short templates are used for the Short length and for the one-bar ii–V section.
 
 ## Major ii–V (one bar per chord: ii | V | I)
 
@@ -30,6 +30,14 @@ B♭m7 arpeggio with the 11th, then E♭7 with its 9th (F). **D♭ → C** is th
 
 Dm9 down from the root and back up from the 9th. C → B links the 7th of Dm7 to the 3rd of G7, and **F → E** does the same into Cmaj7.
 
+**Essential 4** · written for Dm7 → G7 → Cmaj7 (key signature C)
+
+```
+"ii"c3A F2E2|"V"B3d f2d2|"I"e4 z4|]
+```
+
+Dotted-quarter rhythm on the chord tones: C–A–F–E over Dm7, then B–D–F over G7, and D steps up to **E, the 3rd of Cmaj7**.
+
 **Bebop 1** · written for Fm7 → B♭7♭9 → E♭maj7 (key signature E♭)
 
 ```
@@ -53,6 +61,14 @@ B♭ dorian down from F, an **E°7** arpeggio for E♭7♭9, then B♭–B♮ ch
 ```
 
 Up the top of Dm9 and down the scale, then a C → B approach into a **B°7** arpeggio (the ♭9 sound), and D steps up to **E, the 3rd of Cmaj7**.
+
+**Bebop 4** · written for Dm7 → G7♭9 → Cmaj7 (key signature C)
+
+```
+"ii"AGFE ^DEFA|"V"_AGF_E D_DC=B|"I"c2G2 E4|]
+```
+
+Down Dm7 from the 5th with a chromatic lower neighbor (D♯) and back up to A, which slides a half step to **A♭**, the ♭9. A chromatic descent through the altered tones lands on B → **C**.
 
 ## Minor ii–V (one bar per chord: iiø | V7♭9 | i)
 
@@ -80,6 +96,14 @@ Dm7♭5 arpeggio, then a B°7 arpeggio over G7♭9. The **leading tone B♮** re
 
 Dm7♭5 down and back up. Over G7♭9 the line circles the 3rd (B–G–A♭–B), climbs to the 7th and lands on **C** through the ♭13 (E♭) and the 5th (D).
 
+**Essential 4** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
+
+```
+"ii"c3_A F2D2|"V"=B,3D F2_A2|"I"G4 z4|]
+```
+
+Dotted-quarter arpeggios: Dm7♭5 down from the 7th, G7♭9 up from the 3rd to the ♭9 (A♭), and A♭ falls to **G**, the 5th of Cm.
+
 **Bebop 1** · written for Gm7♭5 → C7♭9 → Fm7 (key signature E♭)
 
 ```
@@ -104,7 +128,15 @@ Locrian run from D back down to D, a C–B♮ approach into the ♭9 arpeggio, a
 
 Starts on the and of 1 with Dm7♭5 and its ♭9 (E♭), runs up G7♭9 to the ♭9 (A♭) and back down, and D rises to **E♭, the 3rd of Cm**.
 
-## One-bar major ii–V (ii V | I)
+**Bebop 4** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
+
+```
+"ii"_ecdf _agfd|"V"_dc=Bd f_agf|"I"_e2G2 c4|]
+```
+
+An E♭–C enclosure of D opens the Dm7♭5 arpeggio. Over G7♭9, D♭–C lead chromatically into B, the line climbs to the ♭9 (A♭), and F resolves to **E♭, the 3rd of Cm**.
+
+## Short major ii–V (two beats per chord: ii V | I)
 
 **Essential 1** · written for Fm7 → B♭7 → E♭maj7 (key signature E♭)
 
@@ -122,6 +154,14 @@ Guide tones only: **A♭ and E♭** (3rd and 7th of Fm7), **D and A♭** (3rd an
 
 Dm9 up from the 3rd, G7 down from the 5th, and the 7th (F) falls to **E**.
 
+**Essential 3** · written for Dm7 → G7 → Cmaj7 (key signature C)
+
+```
+"ii"cAFD "V"=B,DFA|"I"G4 z4|]
+```
+
+Dm7 down from the 7th, G9 up from the 3rd, and A falls to **G**, the 5th of Cmaj7.
+
 **Bebop 1** · written for Fm7 → B♭7♭9 → E♭maj7 (key signature E♭)
 
 ```
@@ -138,7 +178,15 @@ The classic shape: F–E♭–D–C down, **B°7** up, and A♭ falls to G on th
 
 A straight run down: Dm7 from F, then B–A♭–G–F over G7♭9 (3rd, ♭9, root, 7th), and F resolves to **E**.
 
-## One-bar minor ii–V (iiø V7♭9 | i)
+**Bebop 3** · written for Dm7 → G7♭9 → Cmaj7 (key signature C)
+
+```
+"ii"zDFA "V"_A^FG=B|"I"c4 z4|]
+```
+
+Up Dm7 from the and of 1, then an A♭–F♯ enclosure of G, and the 3rd (B) leads into **C**.
+
+## Short minor ii–V (two beats per chord: iiø V7♭9 | i)
 
 **Essential 1** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
 
@@ -148,6 +196,22 @@ A straight run down: Dm7 from F, then B–A♭–G–F over G7♭9 (3rd, ♭9, r
 
 Guide tones only: **F and C** (3rd and 7th of Dm7♭5), **B and F** (3rd and 7th of G7♭9), resolving to E♭.
 
+**Essential 2** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
+
+```
+"ii"DF_Ac "V"=Bd_af|"I"_e4 z4|]
+```
+
+Dm7♭5 up from the root, then G7♭9 from the 3rd with a leap to the ♭9 (A♭), and F resolves to **E♭**, the 3rd of Cm.
+
+**Essential 3** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
+
+```
+"ii"c2_A2 "V"G2=B2|"I"c4 z4|]
+```
+
+Quarter notes: C and A♭ (7th and ♭5 of Dm7♭5), G and B (root and 3rd of G7♭9), and the leading tone resolves to **C**.
+
 **Bebop 1** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
 
 ```
@@ -155,6 +219,22 @@ Guide tones only: **F and C** (3rd and 7th of Dm7♭5), **B and F** (3rd and 7th
 ```
 
 Down Dm7♭5 from the root, up a **B°7** arpeggio for the ♭9 sound, and A♭ falls to G, the 5th of Cm.
+
+**Bebop 2** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
+
+```
+"ii"_edc_A "V"G_A=Bd|"I"c4 z4|]
+```
+
+Locrian run down from the ♭9 (E♭) of Dm7♭5, then G–A♭–B–D up the G7♭9, and D falls to **C**.
+
+**Bebop 3** · written for Dm7♭5 → G7♭9 → Cm7 (key signature C)
+
+```
+"ii"zF_Ac "V"=B_AGF|"I"_E4 z4|]
+```
+
+Dm7♭5 from the and of 1, then B–A♭–G–F down G7♭9 (3rd, ♭9, root, 7th), and F resolves to **E♭**, the 3rd of Cm.
 
 ## Full chain (iiø/ii | V/ii | ii | V | I)
 
@@ -165,3 +245,4 @@ Down Dm7♭5 from the root, up a **B°7** arpeggio for the ♭9 sound, and A♭ 
 ```
 
 Each bar ends a half or whole step from a chord tone of the next: F → E♮, D♭ → C, E♭ → D, A♭ → G.
+
