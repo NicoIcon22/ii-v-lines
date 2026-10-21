@@ -1,6 +1,6 @@
 # Deployment
 
-The app is a static site (`index.html`, `lines.js`, `tunes.js`, `pdfchart.js`, `mytunes.js`) hosted on GitHub Pages. Saved tunes live in each visitor's browser, so there is no server or database to run.
+The app is a static site (`index.html`, `style.css`, `app.js`, `lines.js`, `tunes.js`, `pdfchart.js`, `mytunes.js`) hosted on GitHub Pages. Saved tunes live in each visitor's browser, so there is no server or database to run.
 
 - **Repository:** https://github.com/NicoIcon22/ii-v-lines (public)
 - **Live URL:** https://nicoicon22.github.io/ii-v-lines/

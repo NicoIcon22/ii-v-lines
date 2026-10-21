@@ -12,11 +12,15 @@ It grew out of the *East of the Sun ii–V Lines* page and keeps the same layout
 2. **Key.** Leave it on *Tune's key*, or pick another key to transpose everything. For a tune that isn't in the library, the key decides the ii–Vs: home, into ii, to IV and into vi for a major key; home, the relative major and the iv for a minor key.
 3. **Paste the chord changes (optional).** Any ii–V in the text (a m7 or m7♭5 followed by a dominant 7th a fourth up) gets its own lines. This overrides the library list. With pasted changes, the Key menu sets the home key and doesn't transpose them.
 4. **Upload chart PDF (optional).** Click *Upload chart PDF* or drop a PDF on the tune box. The app reads the chord symbols from the PDF's text, puts them in the changes box (check or edit them there), takes the title from the chart, generates the lines and shows the chart's pages above them. A scanned chart has no text to read: it's still shown and saved, and you paste its changes. Remove it with the × on the file name.
-5. **Generate lines**, then **New variations** to get different lines for the same ii–Vs.
+5. **Lines per ii–V.** Pick how many essential and how many bebop lines each ii–V gets (0–3 each; default 1 + 1). Lines in a section are always different from each other.
+6. **Length.** *Long* writes one bar per chord (ii | V | I), as before, plus a one-bar ii–V section in the home key. *Short* writes every ii–V with two beats per chord (ii V | I). *Both* gives each ii–V its long and its short lines, tagged Long and Short.
+7. **Generate lines**, then **New variations** to get different lines for the same ii–Vs. The button flashes, shows the variation number, and the lines that changed light up briefly.
+
+Lines per ii–V and Length apply as soon as you change them, are remembered for your next visit, and are saved with each tune in My tunes.
 
 ## My tunes
 
-Every tune you generate is saved in **My tunes** (under the tune box): title, key, pasted or PDF changes, the variation you were on, and the PDF itself. Click a tune to bring it back exactly as you left it; × twice deletes it. Generating the same title again updates its entry.
+Every tune you generate is saved in **My tunes** (under the tune box): title, key, pasted or PDF changes, the variation you were on, lines per ii–V and length, and the PDF itself. Click a tune to bring it back exactly as you left it; × twice deletes it. Generating the same title again updates its entry.
 
 The list is stored in your browser (IndexedDB), so it's per device and per browser. **Export list** downloads everything, PDFs included, as one `.json` file; **Import** merges such a file into the list on another device (newer entries win). In a private window the list only lasts until the page is closed.
 
@@ -25,11 +29,13 @@ Typing a different title: a tune from My tunes brings back its saved setup, a li
 The transport bar works as before: Read for Concert / B♭ / E♭, Treble or Bass clef, Octave lower (default) or Original, Tempo, Swing, Piano & bass, Loop. Playing a line highlights each note as it sounds.
 
 Every setting is in the URL, so a link opens the same page, for example
-`?tune=Autumn Leaves&key=Am&v=2` or `?tune=My Tune&key=F&changes=Gm7 C7 | Fmaj7`.
+`?tune=Autumn Leaves&key=Am&v=2`, `?tune=Misty&e=2&b=2&len=both` or `?tune=My Tune&key=F&changes=Gm7 C7 | Fmaj7`.
 
 ## What's on the page
 
-For each ii–V target, one essential and one bebop line, one bar per chord. Then, in the home key, a one-bar ii–V (two beats per chord), and for major tunes the full chain: the minor ii–V into ii followed by the home ii–V, one bar per chord.
+For each ii–V target, the essential and bebop lines you asked for, long (one bar per chord), short (two beats per chord) or both. With long lines only, the home key also gets a one-bar ii–V section. With long lines, major tunes end with the full chain: the minor ii–V into ii followed by the home ii–V, one bar per chord.
+
+The template pools hold 4 essential and 4 bebop long lines per ii–V type (major and minor), and 3 + 3 short ones, so even at 3 lines each, New variations brings in something new.
 
 ## How it works
 
@@ -37,7 +43,7 @@ For each ii–V target, one essential and one bebop line, one bar per chord. The
 - `tunes.js` is the tune library: title, composer, year, key, style and ii–V targets.
 - `pdfchart.js` reads chart PDFs with [pdf.js](https://mozilla.github.io/pdf.js/) 3.11.174 (loaded the first time a PDF is used): it joins text pieces on each line (so a raised “-7” after “F” becomes “F-7”), keeps lines that are mostly chord symbols, guesses the title from the biggest text at the top of page 1, and draws the pages.
 - `mytunes.js` stores My tunes in IndexedDB and handles export and import.
-- `index.html` is the page: picker, rendering with [abcjs](https://www.abcjs.net/) 6.4.4, and Web Audio playback (rootless piano voicings, a two-feel bass, hi-hat on 2 and 4, swing eighths).
+- `index.html` is the page markup, `style.css` its styles, and `app.js` the page logic: building the sheet, rendering with [abcjs](https://www.abcjs.net/) 6.4.4, Web Audio playback (rootless piano voicings, a two-feel bass, hi-hat on 2 and 4, swing eighths), and the tune box, chart PDF and My tunes wiring.
 
 No build step and no server code. Any static host works.
 
