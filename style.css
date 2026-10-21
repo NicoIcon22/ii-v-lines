@@ -75,6 +75,18 @@ form.tunebox.drag{outline:2px dashed var(--accent);outline-offset:3px}
 .num select{font:500 14px var(--body);color:var(--ink);background:var(--field);border:1px solid var(--rule);border-radius:6px;padding:4px 6px}
 .optrow .seg{margin-right:4px}
 .tag.len{color:var(--muted);border-style:dashed}
+/* per-line controls */
+.lctl{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px}
+.lctl .play{margin-left:0}
+.seg.mini button{font-size:12px;padding:4px 8px}
+.seg.mini button.own{box-shadow:inset 0 -2px 0 var(--accent)}
+.chk.mini{font-size:13px;gap:5px}
+.chk.mini input{width:15px;height:15px}
+.line.kept{border-color:var(--brass);box-shadow:inset 3px 0 0 var(--brass)}
+.line.noprint .scorewrap{opacity:.55}
+.printctl .btn{margin-left:4px}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.printinfo{display:none}
 .chip{display:inline-flex;align-items:center;gap:6px;font:500 13px var(--mono);border:1px solid var(--rule);border-radius:999px;padding:3px 4px 3px 12px;max-width:100%;min-width:0}
 .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip button{border:0;background:transparent;color:var(--muted);font-size:17px;line-height:1;width:24px;height:24px;border-radius:50%;cursor:pointer}
@@ -157,5 +169,28 @@ aside.tips ul{margin:0;padding-left:18px;display:grid;gap:6px;max-width:68ch}
 footer{padding-block:18px 40px;color:var(--muted);font-size:12.5px}
 footer p{margin:0 0 6px}
 footer a{color:inherit}
-@media (max-width:560px){.ghead h2{font-size:28px}.play{padding:7px 12px}}
+@media (max-width:560px){.ghead h2{font-size:28px}.play{padding:7px 12px}
+  /* on a phone the controls take too much height to stay pinned */
+  .bar{position:static}}
+@media print{
+  :root,:root[data-theme="dark"]{--paper:#fff;--card:#fff;--ink:#000;--muted:#333;--rule:#c8c8c8;--accent:#1d47c9;--brass:#8a5f12;--hl:#000;color-scheme:light}
+  @page{margin:14mm 12mm}
+  body{background:#fff;color:#000;font-size:11.5px}
+  .picker,.bar,aside.tips,footer,#chartWrap,.lede,.lctl,.tag.len{display:none!important}
+  .wrap{max-width:none;padding:0}
+  header.mast{padding:0 0 6px;gap:4px}
+  h1{font-size:30px;line-height:1}
+  h1 .sub{display:inline;margin-left:.3em}
+  .printinfo{display:block;margin:0;font:11px var(--mono);color:#333}
+  main{padding:0;gap:0}
+  section.group{padding-block:8px 4px;gap:6px;border-bottom:0}
+  section.group.noprint,.line.noprint{display:none!important}
+  .ghead h2{font-size:20px}
+  .ghead{break-after:avoid}
+  .gdesc{display:none}
+  .line{break-inside:avoid;page-break-inside:avoid;padding:6px 8px;border-color:#ccc;box-shadow:none;gap:2px}
+  .line.kept{box-shadow:none}
+  .lnote{font-size:10.5px;color:#333}
+  .line.noprint .scorewrap{opacity:1}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}.btn:active{transform:none}#vary.pulse{box-shadow:none}.line.fresh .score svg{animation:none}}

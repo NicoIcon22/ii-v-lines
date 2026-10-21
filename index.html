@@ -65,6 +65,7 @@
 <header class="wrap mast">
   <div class="eyebrow" id="eyebrow"></div>
   <h1><span id="title"></span> <span class="sub">ii–V Lines</span></h1>
+  <p class="printinfo" id="printInfo"></p>
   <p class="lede"><span id="lede"></span>
   <small>Written an octave below the original lines, in treble clef at concert pitch, so the low notes sit on ledger lines under the staff. Use Octave to compare with the original, Clef for bass clef, and B♭ or E♭ to see the notes transposed. Playback follows the octave you pick.</small></p>
 </header>
@@ -101,6 +102,13 @@
     <label class="chk"><input type="checkbox" id="swing" checked> Swing</label>
     <label class="chk"><input type="checkbox" id="comp" checked> Piano &amp; bass</label>
     <label class="chk"><input type="checkbox" id="loop"> Loop</label>
+    <div class="ctl printctl"><label>Print</label>
+      <div class="seg" role="group" aria-label="Select lines to print">
+        <button type="button" id="selAll" title="Tick Print on every line">All</button>
+        <button type="button" id="selNone" title="Untick Print on every line">None</button>
+      </div>
+      <button class="btn sm" type="button" id="printBtn">Print all lines</button>
+    </div>
   </div>
 </div>
 
@@ -114,7 +122,8 @@
       <li>Match the line to the rhythm of your chart. Where the ii and the V share a bar, use the one-bar lines; where each chord gets a full bar, use the two-bar ones.</li>
       <li>Move the start point. Begin a line on beat 3 of the previous bar, or drop the first two notes, so it doesn't always sound like an exercise.</li>
       <li>Mix halves. The ii half of one line and the V half of another almost always connect, because each bar ends a step away from a chord tone.</li>
-      <li>Hit New variations to get different lines for the same ii–Vs.</li>
+      <li>Hit New variations to get different lines for the same ii–Vs. Tick Keep on the lines you like and they stay put.</li>
+      <li>Each line has its own octave (Low, Orig, High) next to it, and a Print box: untick the lines you don't want on paper, then Print.</li>
     </ul>
   </aside>
 </div>
