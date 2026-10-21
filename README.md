@@ -18,6 +18,18 @@ It grew out of the *East of the Sun ii–V Lines* page and keeps the same layout
 
 Lines per ii–V and Length apply as soon as you change them, are remembered for your next visit, and are saved with each tune in My tunes.
 
+## Each line's own controls
+
+Next to every line:
+
+- **Low / Orig / High** sets that line's octave (an octave below the original, the original, an octave above). A line follows the page-wide Octave setting until you pick one; the underlined button shows a line's own choice, and picking the page's octave again clears it. Playback follows the line's octave.
+- **Keep** holds the line in place: New variations, Generate lines and changing Lines per ii–V or Length replace everything else but leave kept lines (and their octave and Print setting) where they are, and never repeat a kept line elsewhere in its section. Kept lines get a gold edge. Keeps belong to the tune, key and changes they were made for; they're saved in My tunes and come back when you reopen the tune.
+- **Print** (on by default) decides whether the line goes on paper.
+
+## Printing
+
+In the transport bar, **Print All / None** ticks or unticks Print on every line, and **Print** opens the browser's print dialog with only the ticked lines: tune title, reading key, clef, date and a link back to the page, then each section that has a ticked line, with its chord path, notation and note. The tune box, controls and chart are left off. Print in the reading key and clef you need (B♭/E♭, bass clef): the printout uses whatever is on screen. Lines that come in new (not kept) start with Print ticked.
+
 ## My tunes
 
 Every tune you generate is saved in **My tunes** (under the tune box): title, key, pasted or PDF changes, the variation you were on, lines per ii–V and length, and the PDF itself. Click a tune to bring it back exactly as you left it; × twice deletes it. Generating the same title again updates its entry.
