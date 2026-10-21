@@ -4,6 +4,9 @@
 const E = window.IIV, TUNES = window.TUNES, MY = window.MYTUNES, PDF = window.PDFCHART;
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+/* every template gets a stable id ("major.bebop.2") so a kept line can be found again */
+const TPL = {};
+for(const g in E.T) for(const l in E.T[g]) E.T[g][l].forEach((tp,i)=>{ tp._id = `${g}.${l}.${i}`; TPL[tp._id] = tp; });
 const store = {
   get(k){ try{ return localStorage.getItem("iiv-"+k); }catch(e){ return null; } },
   set(k,v){ try{ localStorage.setItem("iiv-"+k, v); }catch(e){} }
@@ -28,6 +31,10 @@ let seed = 0, sheet = null;
 let pdf = null;          /* {name, type, blob} attached to the tune on the page */
 let pdfNote = "";        /* one-off message after reading a PDF */
 let currentId = null, drawnBlob = null, tuneChangeP = null;
+/* per-line state, by slot ("t-3|bebop|l|0" = 1st long bebop line of the ii–V into E♭):
+   {keep, oct (null = follow the Octave setting, else -1/0/1), print, tid (template id)}.
+   It belongs to one tune/key/changes; switching to another starts fresh (or from My tunes). */
+let lineState = {}, ctxKey = null, pendingState = null;
 /* what to generate: lines per ii–V and length (long = one bar per chord, short = two beats) */
 let opts = {e:1, b:1, len:"long"};
 const OPT_DEFAULT = {e:1, b:1, len:"long"};
@@ -93,6 +100,9 @@ function buildSheet(){
   }
   const sigName = (lib && source==="lib" && !transposed && lib.sig) ? lib.sig : key.major;
   const sig = E.sigFor(sigName);
+  const ctx = [title, E.nameStr(key.tonic) + (key.minor ? "m" : ""), chText].join("|");
+  if(ctx!==ctxKey){ lineState = pendingState || {}; ctxKey = ctx; }
+  pendingState = null;
 
   /* home target first */
   const isHome = t => E.pcOf(t.root)===E.pcOf(key.tonic) && t.minor===key.minor;
@@ -104,21 +114,42 @@ function buildSheet(){
      the ii–V's position and the variation, so lines in one section are all different. */
   const groups = []; const used = {major:0, minor:0};
   const wantLong = opts.len!=="short", wantShort = opts.len!=="long";
-  const take = (pool, level, n, start, root, short) => {
-    const out = [], arr = pool[level];
-    for(let j=0; j<Math.min(n, arr.length); j++) out.push({level, short, ...E.realize(arr[(start + j) % arr.length], root, sig)});
+  /* n lines of one level from a pool for one section. Kept lines stay in their slots (even if
+     the count went down); the other slots get the next templates in the rotation, skipping
+     any template a kept line already uses. */
+  const take = (gid, pool, level, n, start, root, short) => {
+    const arr = pool[level], out = [], pre = `${gid}|${level}|${short ? "s" : "l"}|`;
+    const kept = Object.keys(lineState).filter(sl=> sl.startsWith(pre) && lineState[sl].keep && TPL[lineState[sl].tid]);
+    const keptIds = new Set(kept.map(sl=>lineState[sl].tid));
+    const fresh = [];
+    for(let j=0; j<arr.length; j++){ const tp = arr[(start + j) % arr.length]; if(!keptIds.has(tp._id)) fresh.push(tp); }
+    const slots = new Set(); for(let j=0; j<n; j++) slots.add(j);
+    kept.forEach(sl=> slots.add(+sl.slice(pre.length)));
+    let fi = 0;
+    [...slots].sort((a,b)=>a-b).forEach(j=>{
+      const slot = pre + j, st = lineState[slot];
+      let tp;
+      if(st && st.keep && TPL[st.tid]) tp = TPL[st.tid];
+      else {
+        tp = fresh[fi++]; if(!tp) return;
+        if(!st || st.tid!==tp._id) lineState[slot] = {keep:false, oct:null, print:true, tid:tp._id};
+      }
+      out.push({level, short, slot, kept: !!(lineState[slot].keep), ...E.realize(tp, root, sig)});
+    });
     return out;
   };
-  const linesFor = (root, minor, c) => {
+  const linesFor = (gid, root, minor, c) => {
     const L = E.T[minor ? "minor" : "major"], S = E.T[minor ? "fastMinor" : "fastMajor"], st = c + seed;
     let out = [];
-    if(wantLong) out = out.concat(take(L,"essential",opts.e,st,root,false), take(L,"bebop",opts.b,st,root,false));
-    if(wantShort) out = out.concat(take(S,"essential",opts.e,st,root,true), take(S,"bebop",opts.b,st,root,true));
+    if(wantLong) out = out.concat(take(gid,L,"essential",opts.e,st,root,false), take(gid,L,"bebop",opts.b,st,root,false));
+    if(wantShort) out = out.concat(take(gid,S,"essential",opts.e,st,root,true), take(gid,S,"bebop",opts.b,st,root,true));
     return out;
   };
   targets.forEach((t,i)=>{
     const c = used[t.minor ? "minor" : "major"]++;
-    const lines = linesFor(t.root, t.minor, c);
+    const gid = `t-${E.pcOf(t.root)}${t.minor ? "m" : ""}`;
+    const lines = linesFor(gid, t.root, t.minor, c);
+    if(!lines.length) return;
     const semis = (E.pcOf(t.root) - E.pcOf(key.tonic) + 12) % 12;
     const rn = t.minor ? ROMAN[semis].toLowerCase() : ROMAN[semis];
     const tname = E.prettyName(t.root) + (t.minor ? " minor" : "");
@@ -130,20 +161,20 @@ function buildSheet(){
       : `The ii–V to ${tname}. Use it wherever the chart moves to ${E.prettyName(t.root)}.`;
     const pc = lines[0].chords.map(c=>E.prettyChord(c.name));
     const path = lines[0].short ? `${pc[0]} ${pc[1]} → ${pc[2]}` : pc.join(" → ");
-    groups.push({id:"g"+i, name, path, desc: wantShort && !wantLong ? desc + " Short lines: two beats per chord." : desc, lines, target:t});
+    groups.push({id:gid, name, path, desc: wantShort && !wantLong ? desc + " Short lines: two beats per chord." : desc, lines, target:t});
   });
 
   /* with long lines only, the home key also gets a one-bar (short) section, as before */
-  if(!wantShort){
+  if(!wantShort && (opts.e || opts.b)){
     const S = E.T[key.minor ? "fastMinor" : "fastMajor"];
-    const fl = take(S,"essential",opts.e,seed,key.tonic,true).concat(take(S,"bebop",opts.b,seed,key.tonic,true));
+    const fl = take("fast",S,"essential",opts.e,seed,key.tonic,true).concat(take("fast",S,"bebop",opts.b,seed,key.tonic,true));
     const fc = fl[0].chords.map(c=>E.prettyChord(c.name));
     groups.push({id:"fast", name:"One-bar ii–V", path:`${fc[0]} ${fc[1]} → ${fc[2]}`,
       desc:"Two beats per chord, for bars where the changes move twice as fast.", lines:fl});
   }
   /* the chain is one long line; it comes with long lines */
   if(!key.minor && wantLong){
-    const cl = [{level:"bebop", ...E.realize(E.T.chain.bebop[0], key.tonic, sig)}];
+    const cl = take("chain",E.T.chain,"bebop",1,0,key.tonic,false);
     groups.push({id:"chain", name:"The full chain", path: cl[0].chords.map(c=>E.prettyChord(c.name)).join(" → "),
       desc:"The minor ii–V into the ii chord, then the home ii–V, one bar per chord, as one continuous line.", lines:cl});
   }
@@ -211,17 +242,27 @@ function generate(push){
       card.className = "line" + (l.chords.reduce((a,c)=>a+c.beats,0) <= 8 ? " short" : "");
       const label = l.level==="essential" ? "Essential" : "Bebop";
       const lenTag = (opts.len==="both" && g.id!=="chain") ? `<span class="tag len">${l.short ? "Short" : "Long"}</span>` : "";
+      const what = `${g.name}, ${l.short ? "short " : ""}${label} line ${i+1}`;
       card.innerHTML = `<div class="lhead"><span class="tag ${l.level}">${label}</span>${lenTag}
-        <button class="play" type="button" aria-label="Play ${esc(g.name)}, ${l.short ? "short " : ""}${label} line"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg><span>Play</span></button></div>
+        <div class="lctl">
+          <div class="seg mini loct" role="group" aria-label="Octave for ${esc(what)}">
+            <button type="button" data-o="-1" title="An octave below the original">Low</button><button type="button" data-o="0" title="The original octave">Orig</button><button type="button" data-o="1" title="An octave above the original">High</button>
+          </div>
+          <label class="chk mini" title="Keep this line when you generate new lines"><input type="checkbox" class="keep"> Keep</label>
+          <label class="chk mini" title="Include this line when printing"><input type="checkbox" class="prn"> Print</label>
+          <button class="play" type="button" aria-label="Play ${esc(what)}"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg><span>Play</span></button>
+        </div></div>
         <div class="scorewrap"><div class="score"></div></div><p class="lnote">${l.note}</p>`;
       sec.appendChild(card);
-      const it = {l, card, score:card.querySelector(".score"), btn:card.querySelector(".play"), vo:null};
+      const it = {l, card, sec, score:card.querySelector(".score"), btn:card.querySelector(".play"), vo:null};
       items.push(it);
       it.btn.addEventListener("click", ()=> (playing && playing.it===it) ? stop() : play(it));
+      wireLine(it);
     });
     main.appendChild(sec);
   });
   renderAll();
+  markPrint();
 
   /* url + memory */
   const p = new URLSearchParams();
@@ -288,7 +329,12 @@ const fmtDate = t => new Date(t).toLocaleDateString(undefined, {month:"short", d
 async function saveCurrent(S){
   const id = norm(S.title); if(!id) return;
   const cur = await MY.get(id), now = Date.now();
-  const rec = {id, title:S.title, key:$("key").value, changes:$("changes").value.trim(), seed, opts:Object.assign({}, opts),
+  const lines = {};
+  Object.keys(lineState).forEach(sl=>{
+    const st = lineState[sl];
+    if(st.keep || (st.oct!==null && st.oct!==undefined) || st.print===false) lines[sl] = {k:st.keep ? 1 : 0, o:st.oct===undefined ? null : st.oct, p:st.print===false ? 0 : 1, t:st.tid};
+  });
+  const rec = {id, title:S.title, key:$("key").value, changes:$("changes").value.trim(), seed, opts:Object.assign({}, opts), lines,
     pdf: pdf ? {name:pdf.name, type:pdf.type || "application/pdf", blob:pdf.blob} : null,
     keyLabel: keyLabel(S.key), targets: S.targets.map(t=>E.prettyName(t.root) + (t.minor ? "m" : "")),
     lib: !!S.lib, created: cur ? cur.created : now, updated: now};
@@ -308,7 +354,7 @@ async function renderMine(){
     const li = document.createElement("li");
     const n = (r.targets||[]).length;
     li.innerHTML = `<button type="button" class="open"${r.id===currentId ? ' aria-current="true"' : ""}><span class="t">${esc(r.title)}</span>
-      <span class="m">${esc(r.keyLabel||"")} · ${n} ii–V${n===1?"":"s"}${r.changes ? " · own changes" : ""}${r.pdf ? " · PDF" : ""}${r.seed ? ` · variation ${r.seed+1}` : ""}${r.opts && (r.opts.e!==1 || r.opts.b!==1) ? ` · ${r.opts.e}+${r.opts.b} lines` : ""}${r.opts && r.opts.len!=="long" ? ` · ${r.opts.len==="both" ? "long + short" : "short"}` : ""} · ${fmtDate(r.updated)}</span></button>
+      <span class="m">${esc(r.keyLabel||"")} · ${n} ii–V${n===1?"":"s"}${r.changes ? " · own changes" : ""}${r.pdf ? " · PDF" : ""}${r.seed ? ` · variation ${r.seed+1}` : ""}${r.opts && (r.opts.e!==1 || r.opts.b!==1) ? ` · ${r.opts.e}+${r.opts.b} lines` : ""}${r.opts && r.opts.len!=="long" ? ` · ${r.opts.len==="both" ? "long + short" : "short"}` : ""}${r.lines && Object.values(r.lines).some(x=>x.k) ? ` · ${Object.values(r.lines).filter(x=>x.k).length} kept` : ""} · ${fmtDate(r.updated)}</span></button>
       <button type="button" class="del" aria-label="Delete ${esc(r.title)} from my tunes" title="Delete">×</button>`;
     li.querySelector(".open").addEventListener("click", ()=> openRec(r));
     const del = li.querySelector(".del"); let armed = null;
@@ -320,6 +366,12 @@ async function renderMine(){
   });
 }
 
+function expandLines(lines){
+  if(!lines) return null;
+  const out = {};
+  Object.keys(lines).forEach(sl=>{ const x = lines[sl]; out[sl] = {keep:!!x.k, oct: x.o===undefined ? null : x.o, print: x.p!==0, tid:x.t}; });
+  return out;
+}
 function openRec(r){
   $("tune").value = r.title;
   $("key").value = r.key || "";
@@ -327,6 +379,7 @@ function openRec(r){
   seed = r.seed || 0;
   pdf = r.pdf || null;
   if(r.opts){ opts = cleanOpts(r.opts); showOpts(); }
+  pendingState = expandLines(r.lines);
   generate(true);
   window.scrollTo({top:0, behavior:"smooth"});
 }
@@ -346,34 +399,92 @@ $("importFile").addEventListener("change", async e=>{
 });
 
 function octShift(){ return octave==="low" ? -1 : 0; }
+const stOf = it => lineState[it.l.slot] || (lineState[it.l.slot] = {keep:false, oct:null, print:true, tid:""});
+function octOf(it){ const o = stOf(it).oct; return o===null || o===undefined ? octShift() : o; }
 
-function renderAll(){
+/* ---------- per-line controls: octave, keep, print ---------- */
+function showLineCtl(it){
+  const st = stOf(it), o = octOf(it);
+  it.card.querySelectorAll(".loct button").forEach(b=>{
+    b.setAttribute("aria-pressed", +b.dataset.o===o ? "true" : "false");
+    b.classList.toggle("own", st.oct!==null && st.oct!==undefined && +b.dataset.o===o);
+  });
+  it.card.querySelector(".keep").checked = !!st.keep;
+  it.card.querySelector(".prn").checked = st.print!==false;
+  it.card.classList.toggle("kept", !!st.keep);
+}
+function wireLine(it){
+  showLineCtl(it);
+  it.card.querySelectorAll(".loct button").forEach(b=> b.addEventListener("click", ()=>{
+    const v = +b.dataset.o, st = stOf(it);
+    /* picking the octave the whole page is on clears the line's own setting */
+    st.oct = v===octShift() ? null : v;
+    if(playing && playing.it===it) stop();
+    renderOne(it); showLineCtl(it); showRange(); saveSoon();
+  }));
+  it.card.querySelector(".keep").addEventListener("change", e=>{ stOf(it).keep = e.target.checked; showLineCtl(it); saveSoon(); });
+  it.card.querySelector(".prn").addEventListener("change", e=>{ stOf(it).print = e.target.checked; markPrint(); saveSoon(); });
+}
+let saveT;
+function saveSoon(){ clearTimeout(saveT); saveT = setTimeout(()=>{ if(sheet) saveCurrent(sheet); }, 400); }
+
+/* ---------- printing ---------- */
+function markPrint(){
+  let n = 0;
+  items.forEach(it=>{ const on = stOf(it).print!==false; it.card.classList.toggle("noprint", !on); if(on) n++; });
+  main.querySelectorAll("section.group").forEach(sec=> sec.classList.toggle("noprint", !sec.querySelector(".line:not(.noprint)")));
+  $("printBtn").textContent = n===items.length ? `Print all ${n} lines` : `Print ${n} of ${items.length} lines`;
+  $("printBtn").disabled = !n;
+}
+function setAllPrint(on){ items.forEach(it=>{ stOf(it).print = on; showLineCtl(it); }); markPrint(); saveSoon(); }
+function fillPrintInfo(){
+  const rk = {0:"Concert pitch", 2:"B♭ instruments", 9:"E♭ instruments"}[transpose];
+  $("printInfo").textContent = `${rk} · ${clef==="bass" ? "Bass" : "Treble"} clef · ${new Date().toLocaleDateString()} · ${location.href}`;
+}
+$("selAll").addEventListener("click", ()=> setAllPrint(true));
+$("selNone").addEventListener("click", ()=> setAllPrint(false));
+$("printBtn").addEventListener("click", ()=>{ stop(); fillPrintInfo(); window.print(); });
+window.addEventListener("beforeprint", ()=>{ markPrint(); fillPrintInfo(); });
+
+function renderOne(it){
   if(!window.ABCJS || !sheet) return;
-  narrow = window.innerWidth < 560;
   const head = `X:1\nM:4/4\nL:1/8\nK:${sheet.sigName}${clef==="bass" ? " clef=bass" : ""}\n`;
-  let lo = null, hi = null;
-  items.forEach(it=>{
+  {
     const bars = it.l.chords.reduce((a,c)=>a+c.beats,0)/4;
     const opts = !narrow ? {staffwidth: bars>3 ? 820 : (bars>2 ? 660 : 480)}
       : bars>3 ? {staffwidth:520, wrap:{minSpacing:1, maxSpacing:2.4, preferredMeasuresPerLine:3}}
       : {staffwidth: bars>2 ? 520 : 400};
-    const src = head + E.lineAbc(it.l, sheet.sig, octShift());
+    const sh = octOf(it);
+    const src = head + E.lineAbc(it.l, sheet.sig, sh);
     it.vo = ABCJS.renderAbc(it.score, src, Object.assign(opts, {
       responsive:"resize", add_classes:true, visualTranspose:transpose,
       paddingtop:4, paddingbottom:4, paddingleft:0, paddingright:2,
       foregroundColor:"currentColor",
       format:{gchordfont:"IBM Plex Mono 14", annotationfont:"Work Sans 12"}
     }))[0];
-    it.events = E.lineEvents(it.l, octShift());
+    it.events = E.lineEvents(it.l, sh);
+  }
+}
+function renderAll(){
+  if(!window.ABCJS || !sheet) return;
+  narrow = window.innerWidth < 560;
+  items.forEach(it=>{ renderOne(it); showLineCtl(it); });
+  showRange();
+}
+function showRange(){
+  let lo = null, hi = null;
+  items.forEach(it=>{
+    const sh = octOf(it);
     it.l.toks.forEach(t=>{
       if(t.t!=="note") return;
-      const n = {step:t.step + 7*octShift(), alter:t.alter}, m = E.midiOf(n);
+      const n = {step:t.step + 7*sh, alter:t.alter}, m = E.midiOf(n);
       if(!lo || m < lo.m) lo = {m, n};
       if(!hi || m > hi.m) hi = {m, n};
     });
   });
+  const mixed = items.some(it=>{ const o = stOf(it).oct; return o!==null && o!==undefined; });
   const nm = x => E.LET[((x.n.step%7)+7)%7] + E.glyph(x.n.alter) + Math.floor(x.n.step/7);
-  $("range").textContent = lo ? `${octave==="low" ? "In the lower octave" : "In the original octave"} the notes run from ${nm(lo)} to ${nm(hi)} concert.` : "";
+  $("range").textContent = lo ? `${mixed ? "With your octave choices" : octave==="low" ? "In the lower octave" : "In the original octave"} the notes run from ${nm(lo)} to ${nm(hi)} concert.` : "";
 }
 
 /* ---------- audio ---------- */
@@ -521,12 +632,12 @@ $("nE").addEventListener("change", ()=> setOpts({e:+$("nE").value}, "e"));
 $("nB").addEventListener("change", ()=> setOpts({b:+$("nB").value}, "b"));
 document.querySelectorAll("#len button").forEach(b=> b.addEventListener("click", ()=> setOpts({len:b.dataset.l})));
 $("vary").addEventListener("click", ()=>{
-  const before = items.map(it=>it.l.note);
+  const before = {}; items.forEach(it=> before[it.l.slot] = it.l.note);
   seed++; generate(false);
   /* feedback: flash the button, badge the variation number, and flash each line that changed */
   const b = $("vary"); b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse");
   clearTimeout(b._t); b._t = setTimeout(()=>b.classList.remove("pulse"), 600);
-  items.forEach((it,i)=>{ if(it.l.note!==before[i]) it.card.classList.add("fresh"); });
+  items.forEach(it=>{ if(it.l.note!==before[it.l.slot]) it.card.classList.add("fresh"); });
   setTimeout(()=> items.forEach(it=>it.card.classList.remove("fresh")), 800);
 });
 $("tune").addEventListener("change", ()=>{
@@ -536,7 +647,7 @@ $("tune").addEventListener("change", ()=>{
   const v = $("tune").value, id = norm(v);
   if(!id || (sheet && id===norm(sheet.title))) return;
   tuneChangeP = MY.get(id).then(r=>{
-    if(r){ $("key").value = r.key || ""; $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes; pdf = r.pdf || null; }
+    if(r){ $("key").value = r.key || ""; $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes; pdf = r.pdf || null; pendingState = expandLines(r.lines); }
     else if(findTune(v)){ $("key").value = ""; $("changes").value = ""; pdf = null; }
     tuneChangeP = null;
   });
@@ -553,12 +664,18 @@ function loadParams(qs){
   opts = cleanOpts({e: p.has("e") ? p.get("e") : OPT_DEFAULT.e, b: p.has("b") ? p.get("b") : OPT_DEFAULT.b, len: p.get("len") || OPT_DEFAULT.len});
   showOpts();
 }
-async function pdfFor(title){ const r = await MY.get(norm(title || "")); return r && r.pdf ? r.pdf : null; }
-window.addEventListener("popstate", async ()=>{ loadParams(location.search); pdf = await pdfFor($("tune").value); generate(false); });
+/* bring back the PDF and the per-line settings saved for the tune in the box */
+async function restoreSaved(){
+  const r = await MY.get(norm($("tune").value || ""));
+  pdf = r && r.pdf ? r.pdf : null;
+  pendingState = r ? expandLines(r.lines) : null;
+  if(r) ctxKey = null;
+}
+window.addEventListener("popstate", async ()=>{ loadParams(location.search); await restoreSaved(); generate(false); });
 
 (async function init(){
   loadParams(location.search.length>1 ? location.search : (store.get("last") || ""));
-  pdf = await pdfFor($("tune").value);
+  await restoreSaved();
   generate(false);
   if(!(await MY.persistent())) $("mineHint").textContent = "This browser isn't letting the page store data (a private window, perhaps), so the list only lasts until you close the page. Export it to keep a copy.";
 })();
