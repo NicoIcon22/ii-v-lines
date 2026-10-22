@@ -260,8 +260,17 @@ function buildSheet(){
     const arr = pool[level], out = [], pre = `${gid}|${level}|${short ? "s" : "l"}|`;
     const kept = Object.keys(lineState).filter(sl=> sl.startsWith(pre) && lineState[sl].keep && TPL[lineState[sl].tid]);
     const keptIds = new Set(kept.map(sl=>lineState[sl].tid));
-    const fresh = [];
-    for(let j=0; j<arr.length; j++){ const tp = arr[(start + j) % arr.length]; if(!keptIds.has(tp._id)) fresh.push(tp); }
+    /* a template too wide to fit between low B♭ and high F at any octave in this key (as
+       written for the reading key) goes to the back of the line, used only if nothing else is left */
+    const ws = (HORN[transpose] || [0,0])[1];
+    const fitsRange = tp => {
+      const ms = E.realize(tp, root, sig, iq).toks.filter(t=>t.t==="note").map(E.midiOf);
+      const lo = Math.min(...ms) + ws, hi = Math.max(...ms) + ws;
+      return [-3,-2,-1,0,1,2,3].some(o=> lo + 12*o >= WR_LO && hi + 12*o <= WR_HI);
+    };
+    const fresh = [], wide = [];
+    for(let j=0; j<arr.length; j++){ const tp = arr[(start + j) % arr.length]; if(!keptIds.has(tp._id)) (fitsRange(tp) ? fresh : wide).push(tp); }
+    fresh.push(...wide);
     const slots = new Set(); for(let j=0; j<n; j++) slots.add(j);
     kept.forEach(sl=> slots.add(+sl.slice(pre.length)));
     let fi = 0;
@@ -601,14 +610,64 @@ $("importFile").addEventListener("change", async e=>{
 
 function octShift(){ return octave==="low" ? -1 : 0; }
 const stOf = it => lineState[it.l.slot] || (lineState[it.l.slot] = {keep:false, oct:null, print:true, tid:""});
-function octOf(it){ const o = stOf(it).oct; return o===null || o===undefined ? octShift() : o; }
+/* the octave asked for: the line's own choice, else the page's Octave setting */
+function octWant(it){ const o = stOf(it).oct; return o===null || o===undefined ? octShift() : o; }
+
+/* ---------- written range ----------
+   In treble clef no line is written below low B♭ (the B♭ below middle C) or above high F
+   (the F above the staff's top-line F plus an octave), the saxophone's range, checked on the
+   notes as written for the reading key. A line that would go past either is written an
+   octave up or down (the nearest octave that fits). Bass clef is left as it is. */
+const WR_LO = 58, WR_HI = 89;
+const capped = () => clef!=="bass";
+const wSemis = () => transpose ? hornIv()[1] : 0;
+function lineMs(l){ return l._ms || (l._ms = l.toks.filter(t=>t.t==="note").map(E.midiOf)); }
+function fitsAt(it, o){
+  if(!capped()) return true;
+  const ms = lineMs(it.l), d = wSemis() + 12*o;
+  return Math.min(...ms) + d >= WR_LO && Math.max(...ms) + d <= WR_HI;
+}
+/* where the line goes: {o, toks} with the octave applied to the (concert) notes */
+function placeOf(it){
+  const want = octWant(it);
+  const shift = (toks, o) => o ? toks.map(t=> t.t==="note" ? Object.assign({}, t, {step:t.step + 7*o}) : t) : toks;
+  const o = [want, want+1, want-1, want+2, want-2].find(x=> fitsAt(it, x));
+  if(o!==undefined) return {o, toks: shift(it.l.toks, o)};
+  /* too wide for the range at any octave (rare): the octave closest to fitting, and each bar
+     still outside the range moves an octave on its own */
+  const ms = lineMs(it.l), d0 = wSemis();
+  const over = x => Math.max(0, WR_LO - (Math.min(...ms) + d0 + 12*x)) + Math.max(0, Math.max(...ms) + d0 + 12*x - WR_HI);
+  const best = [want, want+1, want-1, want+2, want-2].reduce((a,x)=> over(x) < over(a) ? x : a);
+  const toks = shift(it.l.toks, best), out = [];
+  let bar = [], carry = 0;
+  /* the bars after a moved bar move with it while they still fit, so the line keeps its
+     shape into the resolution */
+  const flush = ()=>{
+    const ns = bar.filter(t=>t.t==="note").map(t=> E.midiOf(t) + d0);
+    const fits = m => !ns.length || (Math.min(...ns) + 12*m >= WR_LO && Math.max(...ns) + 12*m <= WR_HI);
+    let m = 0;
+    if(!fits(0)) m = Math.min(...ns) < WR_LO ? 1 : -1;
+    else if(carry && fits(carry)) m = carry;
+    carry = m;
+    bar.forEach(t=> out.push(m && t.t==="note" ? Object.assign({}, t, {step:t.step + 7*m}) : t));
+    bar = [];
+  };
+  toks.forEach(t=>{ bar.push(t); if(t.t==="bar") flush(); });
+  flush();
+  return {o: best, toks: out};
+}
 
 /* ---------- per-line controls: octave, keep, print ---------- */
 function showLineCtl(it){
-  const st = stOf(it), o = octOf(it);
+  const st = stOf(it), o = it.place ? it.place.o : octWant(it);
+  const anyFits = [-1,0,1].some(x=> fitsAt(it, x));
   it.card.querySelectorAll(".loct button").forEach(b=>{
-    b.setAttribute("aria-pressed", +b.dataset.o===o ? "true" : "false");
-    b.classList.toggle("own", st.oct!==null && st.oct!==undefined && +b.dataset.o===o);
+    const v = +b.dataset.o, ok = !anyFits || fitsAt(it, v);
+    b.setAttribute("aria-pressed", v===o ? "true" : "false");
+    b.classList.toggle("own", st.oct!==null && st.oct!==undefined && v===o);
+    b.disabled = !ok;
+    b.title = ok ? ({"-1":"An octave below the original", "0":"The original octave", "1":"An octave above the original"})[v]
+      : `Not available: this line would go ${Math.min(...lineMs(it.l)) + wSemis() + 12*v < WR_LO ? "below low B♭" : "above high F"}`;
   });
   it.card.querySelector(".keep").checked = !!st.keep;
   it.card.querySelector(".prn").checked = st.print!==false;
@@ -657,15 +716,16 @@ function renderOne(it){
     const opts = !narrow ? {staffwidth: bars>3 ? 820 : (bars>2 ? 660 : 480)}
       : bars>3 ? {staffwidth:520, wrap:{minSpacing:1, maxSpacing:2.4, preferredMeasuresPerLine:3}}
       : {staffwidth: bars>2 ? 520 : 400};
-    const sh = octOf(it);
-    const src = head + E.lineAbc(hornLine(it.l), hornSig(), sh);
+    it.place = placeOf(it);
+    const placed = {toks: it.place.toks, chords: it.l.chords};
+    const src = head + E.lineAbc(hornLine(placed), hornSig(), 0);
     it.vo = ABCJS.renderAbc(it.score, src, Object.assign(opts, {
       responsive:"resize", add_classes:true,
       paddingtop:4, paddingbottom:4, paddingleft:0, paddingright:2,
       foregroundColor:"currentColor",
       format:{gchordfont:"IBM Plex Mono 14", annotationfont:"Work Sans 12"}
     }))[0];
-    it.events = E.lineEvents(it.l, sh);
+    it.events = E.lineEvents(placed, 0);
   }
 }
 function renderAll(){
@@ -676,18 +736,22 @@ function renderAll(){
 }
 function showRange(){
   let lo = null, hi = null;
+  let moved = 0;
   items.forEach(it=>{
-    const sh = octOf(it);
-    it.l.toks.forEach(t=>{
+    const P = it.place || placeOf(it);
+    if(P.o!==octWant(it)) moved++;
+    P.toks.forEach(t=>{
       if(t.t!=="note") return;
-      const n = {step:t.step + 7*sh, alter:t.alter}, m = E.midiOf(n);
+      const n = {step:t.step, alter:t.alter}, m = E.midiOf(n);
       if(!lo || m < lo.m) lo = {m, n};
       if(!hi || m > hi.m) hi = {m, n};
     });
   });
   const mixed = items.some(it=>{ const o = stOf(it).oct; return o!==null && o!==undefined; });
   const nm = x => E.LET[((x.n.step%7)+7)%7] + E.glyph(x.n.alter) + Math.floor(x.n.step/7);
-  $("range").textContent = lo ? `${mixed ? "With your octave choices" : octave==="low" ? "In the lower octave" : "In the original octave"} the notes run from ${nm(lo)} to ${nm(hi)} concert.` : "";
+  const who = transpose ? ` as written for ${transpose===2 ? "B♭" : "E♭"} instruments` : "";
+  const cap = capped() ? ` Nothing is written below low B♭ or above high F${who}${moved ? `: ${moved===1 ? "one line moves" : `${moved} lines move`} an octave from the one picked to stay inside` : ""}.` : "";
+  $("range").textContent = lo ? `${mixed ? "With your octave choices" : octave==="low" ? "In the lower octave" : "In the original octave"} the notes run from ${nm(lo)} to ${nm(hi)} concert.${cap}` : "";
 }
 
 /* ---------- audio ---------- */
