@@ -132,7 +132,7 @@ async function ocrLines(doc, progress){
 const GENERIC_TITLE = /^(untitled|claude|document|scan|image|img[_ -]?\d*|microsoft.*|.*\.(pdf|docx?|png|jpe?g))$/i;
 async function read(blob, filename, progress){
   const doc = await open(blob);
-  let textLines = [], titleGuess = "", allSizes = [], tops = [];
+  let textLines = [], titleGuess = "", allSizes = [], tops = [], pageH = 0;
   for(let p=1; p<=doc.numPages; p++){
     const page = await doc.getPage(p);
     const tc = await page.getTextContent();
@@ -145,15 +145,16 @@ async function read(blob, filename, progress){
     });
     linesOf(tc.items, true).forEach(l=> textLines.push(l.text));
     if(p===1){
-      const vp = page.getViewport({scale:1});
+      const vp = page.getViewport({scale:1}); pageH = vp.height;
       tops = lines.filter(l=> l.y > vp.height*0.6 && /[a-z]{2}/i.test(l.text) && !l.text.split(/\s+/).every(w=>isChord(cleanToken(w))));
     }
   }
-  /* title: the biggest text near the top of page 1, if it is clearly bigger than the rest */
+  /* title: the biggest text near the top of page 1, if it is clearly bigger than the rest
+     (or a little bigger and right at the top, as Sibelius prints it) */
   allSizes.sort((a,b)=>a-b);
   const median = allSizes.length ? allSizes[Math.floor(allSizes.length/2)] : 0;
   const big = tops.sort((a,b)=> b.size-a.size)[0];
-  if(big && big.size >= median*1.35) titleGuess = big.text.trim();
+  if(big && (big.size >= median*1.35 || (big.y > pageH*0.85 && big.size >= median*1.1 && /[a-z]{3}/i.test(big.text)))) titleGuess = big.text.trim();
 
   let {rows, count} = chordRows(textLines, cleanToken), ocr = false;
   if(!count){
