@@ -34,6 +34,22 @@ let currentId = null, drawnBlob = null, tuneChangeP = null;
 /* the key and changes the lines on the page were generated from: on a tune switch, a box the
    user hasn't touched since then belongs to the old tune and is cleared */
 let lastGen = {key:"", changes:""};
+/* the pitch the pasted or uploaded changes are written in: 0 concert, 2 B♭, 9 E♭ instruments.
+   The app works in concert, so a B♭ or E♭ chart's chords are moved to concert first. */
+let chartPitch = 0;
+const PITCH_NAME = {0:"concert", 2:"B♭", 9:"E♭"};
+const TO_CONCERT = {2:{steps:6, semis:10}, 9:{steps:2, semis:3}};
+/* "…Eb.pdf", "(Bb)", "Alto", "Tenor": a chart's file name or title saying which instrument it's for */
+const PITCH_WORDS = [
+  [9, /(^|[\s_\-(\[])(e[b♭]|e-flat|eflat|alto( sax)?|bari(tone)?( sax)?)([\s_\-)\]]|$)/i],
+  [2, /(^|[\s_\-(\[])(b[b♭]|b-flat|bflat|tenor( sax)?|trumpet|clarinet|soprano( sax)?)([\s_\-)\]]|$)/i],
+  [0, /(^|[\s_\-(\[])(concert|c version)([\s_\-)\]]|$)/i]
+];
+function detectPitch(...names){
+  for(const n of names){ if(!n) continue; for(const [p, re] of PITCH_WORDS) if(re.test(n)) return p; }
+  return null;
+}
+const stripPitch = t => t.replace(/[\s_\-(\[]+(e[b♭]|b[b♭]|concert|alto|tenor)( (version|instruments?|part|sax))?[)\]]?\s*$/i, "").trim();
 /* per-line state, by slot ("t-3|bebop|l|0" = 1st long bebop line of the ii–V into E♭):
    {keep, oct (null = follow the Octave setting, else -1/0/1), print, tid (template id)}.
    It belongs to one tune/key/changes; switching to another starts fresh (or from My tunes). */
@@ -164,7 +180,10 @@ function buildSheet(){
   const lib = findTune(typed || "East of the Sun");
   const title = lib ? lib.t : typed;
   const chText = $("changes").value.trim();
-  const parsed = chText ? E.parseChanges(chText) : null;
+  /* a B♭ or E♭ chart's chords, moved to concert */
+  const toConcert = TO_CONCERT[chartPitch];
+  const chConcert = chText && toConcert ? E.transposeChanges(chText, toConcert) : chText;
+  const parsed = chConcert ? E.parseChanges(chConcert) : null;
   const usePaste = parsed && parsed.targets.length > 0;
   const choice = $("key").value;
 
@@ -220,7 +239,7 @@ function buildSheet(){
   }
   const sigName = (lib && source==="lib" && !transposed && lib.sig) ? lib.sig : key.major;
   const sig = E.sigFor(sigName);
-  const ctx = [title, E.nameStr(key.tonic) + (key.minor ? "m" : ""), chText].join("|");
+  const ctx = [title, E.nameStr(key.tonic) + (key.minor ? "m" : ""), chText, chartPitch].join("|");
   if(ctx!==ctxKey){ lineState = pendingState || {}; ctxKey = ctx; }
   pendingState = null;
 
@@ -320,7 +339,7 @@ function buildSheet(){
 
   /* the library changes the lines came from, in the key on the page */
   const libChanges = libParsed ? (shift.semis || shift.steps ? E.transposeChanges(lib.ch, shift) : lib.ch) : "";
-  return {title, lib, key, sigName, sig, groups, targets, source, transposed, parsed, typed, libChanges};
+  return {title, lib, key, sigName, sig, groups, targets, source, transposed, parsed, typed, libChanges, chartPitch: source==="paste" ? chartPitch : 0};
 }
 
 /* ---------- render page ---------- */
@@ -370,6 +389,11 @@ function generate(push){
     st = `${t} is only the home ii–V in ${keyTxt}. ${$("key").value ? "Paste" : "Choose the tune's key and paste"} its changes, or upload its chart, to get the ii–Vs the tune actually has.`;
     if(S.parsed) st = `No ii–Vs found in the ${pdf ? "chart's" : "pasted"} changes (a m7 or m7♭5 followed by a dominant 7th a fourth up). ` + st;
   }
+  if(S.chartPitch){
+    const pn = PITCH_NAME[S.chartPitch];
+    st += ` It's ${S.chartPitch===9 ? "an" : "a"} ${pn} chart, so its chords are converted to concert (${esc(keyTxt)})` +
+      (transpose===S.chartPitch ? ` and Read for ${pn} shows them as written on the chart.` : `; set Read for to ${pn} to see them as written on the chart.`);
+  }
   if(seed) st += ` Variation ${seed+1}.`;
   $("varyN").textContent = seed ? String(seed+1) : "";
   if(pdfNote){ st += " " + pdfNote; pdfNote = ""; }
@@ -413,6 +437,7 @@ function generate(push){
   p.set("tune", S.title);
   if($("key").value) p.set("key", $("key").value);
   if($("changes").value.trim()) p.set("changes", $("changes").value.trim());
+  if($("changes").value.trim() && chartPitch) p.set("ck", String(chartPitch));
   if(seed) p.set("v", String(seed+1));
   if(opts.e!==OPT_DEFAULT.e) p.set("e", String(opts.e));
   if(opts.b!==OPT_DEFAULT.b) p.set("b", String(opts.b));
@@ -424,14 +449,26 @@ function generate(push){
   /* the library changes, shown in the empty changes box, with a button to edit them */
   $("changes").placeholder = S.libChanges ? `Library changes for ${S.title} (${keyTxt}):\n${S.libChanges}` : CHG_PLACEHOLDER;
   $("useLib").hidden = !S.libChanges;
+  showChartFor();
 
   showChart();
   saveCurrent(S);
 }
 
 const CHG_PLACEHOLDER = $("changes").placeholder;
+/* "Chart written for": shown whenever there are pasted or uploaded changes */
+function showChartFor(){
+  $("chartForRow").hidden = !$("changes").value.trim();
+  setSeg("chartFor", "p", chartPitch);
+}
+document.querySelectorAll("#chartFor button").forEach(b=> b.addEventListener("click", ()=>{
+  chartPitch = +b.dataset.p; showChartFor(); generate(false);
+}));
+$("changes").addEventListener("input", showChartFor);
+function setReadFor(t){ transpose = t; store.set("transpose", String(t)); setSeg("transpose", "t", t); }
 $("useLib").addEventListener("click", ()=>{
   if(!sheet || !sheet.libChanges) return;
+  chartPitch = 0;   /* the library's changes are concert, in the key on the page */
   $("changes").value = sheet.libChanges; $("changes").focus();
   generate(false);
 });
@@ -466,13 +503,17 @@ async function handleFile(file){
   try{ r = await PDF.read(file, name, msg=>{ $("status").textContent = `${name}: ${msg} The first time, this downloads the OCR reader (about 10 MB).`; }); }
   catch(e){ pdfNote = `Couldn't read ${esc(name)}: ${esc(e.message || "unknown error")}.`; }
   if(r){
-    if(r.title) $("tune").value = r.title;
+    /* which instrument the chart is for, from its file name or title ("…Eb.pdf", "(Bb)") */
+    const det = detectPitch(name.replace(/\.pdf$/i,""), r.title);
+    chartPitch = det || 0;
+    if(r.title) $("tune").value = stripPitch(r.title) || r.title;
     $("key").value = "";
     if(r.count){
       $("changes").value = r.changes; $("chgBox").open = true;
       pdfNote = r.ocr
         ? `This is a scanned chart, so its ${r.count} chord symbols were read with OCR. Check them in the changes box against the chart below: OCR can misread chord symbols. Fix any mistakes and press Generate lines.`
         : `Read ${r.count} chord symbols from the chart; they're in the changes box if you want to check or edit them.`;
+      if(det){ setReadFor(det); pdfNote += ` Its name says ${PITCH_NAME[det]}, so “Chart written for” and Read for are set to ${PITCH_NAME[det]}; change “Chart written for” if the chart is in another pitch.`; }
     } else {
       $("changes").value = ""; $("chgBox").open = true;
       pdfNote = `Couldn't find any chord symbols in ${esc(name)}, even with OCR. Type its changes into the changes box from the chart below and press Generate lines; until then these lines don't come from the chart.`;
@@ -494,7 +535,7 @@ async function saveCurrent(S){
     if(st.keep || (st.oct!==null && st.oct!==undefined) || st.print===false) lines[sl] = {k:st.keep ? 1 : 0, o:st.oct===undefined ? null : st.oct, p:st.print===false ? 0 : 1, t:st.tid};
   });
   const rec = {id, title:S.title, key:$("key").value, changes:$("changes").value.trim(), seed, opts:Object.assign({}, opts), lines,
-    pdf: pdf ? {name:pdf.name, type:pdf.type || "application/pdf", blob:pdf.blob} : null,
+    pdf: pdf ? {name:pdf.name, type:pdf.type || "application/pdf", blob:pdf.blob} : null, ck: chartPitch,
     keyLabel: keyLabel(S.key), targets: S.targets.map(t=>E.prettyName(t.root) + ({maj7:"", m7:"m", "7":"7"})[iqOf(t)]),
     lib: !!S.lib, created: cur ? cur.created : now, updated: now};
   const r = await MY.put(rec);
@@ -513,7 +554,7 @@ async function renderMine(){
     const li = document.createElement("li");
     const n = (r.targets||[]).length;
     li.innerHTML = `<button type="button" class="open"${r.id===currentId ? ' aria-current="true"' : ""}><span class="t">${esc(r.title)}</span>
-      <span class="m">${esc(r.keyLabel||"")} · ${n} ii–V${n===1?"":"s"}${r.changes ? " · own changes" : ""}${r.pdf ? " · PDF" : ""}${r.seed ? ` · variation ${r.seed+1}` : ""}${r.opts && (r.opts.e!==1 || r.opts.b!==1) ? ` · ${r.opts.e}+${r.opts.b} lines` : ""}${r.opts && r.opts.len!=="long" ? ` · ${r.opts.len==="both" ? "long + short" : "short"}` : ""}${r.lines && Object.values(r.lines).some(x=>x.k) ? ` · ${Object.values(r.lines).filter(x=>x.k).length} kept` : ""} · ${fmtDate(r.updated)}</span></button>
+      <span class="m">${esc(r.keyLabel||"")} · ${n} ii–V${n===1?"":"s"}${r.changes ? " · own changes" : ""}${r.pdf ? " · PDF" : ""}${r.ck ? ` · ${PITCH_NAME[r.ck]} chart` : ""}${r.seed ? ` · variation ${r.seed+1}` : ""}${r.opts && (r.opts.e!==1 || r.opts.b!==1) ? ` · ${r.opts.e}+${r.opts.b} lines` : ""}${r.opts && r.opts.len!=="long" ? ` · ${r.opts.len==="both" ? "long + short" : "short"}` : ""}${r.lines && Object.values(r.lines).some(x=>x.k) ? ` · ${Object.values(r.lines).filter(x=>x.k).length} kept` : ""} · ${fmtDate(r.updated)}</span></button>
       <button type="button" class="del" aria-label="Delete ${esc(r.title)} from my tunes" title="Delete">×</button>`;
     li.querySelector(".open").addEventListener("click", ()=> openRec(r));
     const del = li.querySelector(".del"); let armed = null;
@@ -537,6 +578,7 @@ function openRec(r){
   $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes;
   seed = r.seed || 0;
   pdf = r.pdf || null;
+  chartPitch = r.ck || 0;
   if(r.opts){ opts = cleanOpts(r.opts); showOpts(); }
   pendingState = expandLines(r.lines);
   generate(true);
@@ -824,11 +866,11 @@ async function switchTune(){
   const r = await MY.get(norm(v));
   if(r){
     $("key").value = r.key || ""; $("changes").value = r.changes || ""; $("chgBox").open = !!r.changes;
-    pdf = r.pdf || null; pendingState = expandLines(r.lines); seed = r.seed || 0;
+    pdf = r.pdf || null; pendingState = expandLines(r.lines); seed = r.seed || 0; chartPitch = r.ck || 0;
     if(r.opts){ opts = cleanOpts(r.opts); showOpts(); }
   } else {
     pdf = null; seed = 0;
-    if($("changes").value.trim()===lastGen.changes){ $("changes").value = ""; $("chgBox").open = false; }
+    if($("changes").value.trim()===lastGen.changes){ $("changes").value = ""; $("chgBox").open = false; chartPitch = 0; }
     if($("key").value===lastGen.key) $("key").value = "";
   }
   return true;
@@ -851,6 +893,7 @@ function loadParams(qs){
   $("tune").value = p.get("tune") || "East of the Sun (and West of the Moon)";
   const k = p.get("key"); $("key").value = (k && [...MAJ_KEYS, ...MIN_KEYS].includes(k)) ? k : "";
   const ch = p.get("changes") || ""; $("changes").value = ch; if(ch) $("chgBox").open = true;
+  const ck = parseInt(p.get("ck")||"0",10); chartPitch = ch && (ck===2 || ck===9) ? ck : 0;
   const v = parseInt(p.get("v")||"1",10); seed = isFinite(v) && v>1 ? v-1 : 0;
   /* settings left out of the query are the defaults (a bare visit loads the last query, which has them) */
   opts = cleanOpts({e: p.has("e") ? p.get("e") : OPT_DEFAULT.e, b: p.has("b") ? p.get("b") : OPT_DEFAULT.b, len: p.get("len") || OPT_DEFAULT.len});
