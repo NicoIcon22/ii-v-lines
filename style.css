@@ -80,6 +80,7 @@ form.tunebox.drag{outline:2px dashed var(--accent);outline-offset:3px}
 .lctl .play{margin-left:0}
 .seg.mini button{font-size:12px;padding:4px 8px}
 .seg.mini button.own{box-shadow:inset 0 -2px 0 var(--accent)}
+.seg.mini button:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}
 .chk.mini{font-size:13px;gap:5px}
 .chk.mini input{width:15px;height:15px}
 .line.kept{border-color:var(--brass);box-shadow:inset 3px 0 0 var(--brass)}
