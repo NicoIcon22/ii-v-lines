@@ -24,9 +24,13 @@ Lines per ii–V and Length apply as soon as you change them, are remembered for
 
 Next to every line:
 
-- **Low / Orig / High** sets that line's octave (an octave below the original, the original, an octave above). A line follows the page-wide Octave setting until you pick one; the underlined button shows a line's own choice, and picking the page's octave again clears it. Playback follows the line's octave.
+- **Low / Orig / High** sets that line's octave (an octave below the original, the original, an octave above). A line follows the page-wide Octave setting until you pick one; the underlined button shows a line's own choice, and picking the page's octave again clears it. Playback follows the line's octave. An octave that would take the line past low B♭ or high F (see below) is crossed out and can't be picked.
 - **Keep** holds the line in place: New variations, Generate lines and changing Lines per ii–V or Length replace everything else but leave kept lines (and their octave and Print setting) where they are, and never repeat a kept line elsewhere in its section. Kept lines get a gold edge. Keeps belong to the tune, key and changes they were made for; they're saved in My tunes and come back when you reopen the tune.
 - **Print** (on by default) decides whether the line goes on paper.
+
+## Written range
+
+In treble clef no line is written below **low B♭** (the B♭ below middle C) or above **high F** (the top of the saxophone's palm keys), checked on the notes as written for the Read for setting. A line that would go past either, in the octave picked by Octave or by its own Low / Orig / High, is written an octave up or down instead: the nearest octave that fits, which the line's octave buttons then show. The footer says how many lines moved. A template that can't fit that range at any octave in a given key (this happens for one template, in one key per reading key) isn't used there; if it is a kept line, the bars that still go past the range move an octave on their own, together with the bars after them. Bass clef is not limited.
 
 ## Printing
 
